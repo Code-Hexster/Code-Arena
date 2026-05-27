@@ -62,9 +62,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${cinzel.variable} ${cinzelDecorative.variable} ${cormorantGaramond.variable} ${inter.variable} ${jetbrainsMono.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col bg-void text-mist antialiased selection:bg-arcane-500/30 selection:text-white">
+      <body suppressHydrationWarning className="min-h-full flex flex-col bg-void text-mist antialiased selection:bg-arcane-500/30 selection:text-white">
         {/* Inline blocking script to resolve Flash of Unthemed Content (FOUC) */}
         <script
           dangerouslySetInnerHTML={{

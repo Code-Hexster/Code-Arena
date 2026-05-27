@@ -31,7 +31,7 @@ export default function ParticleField({ count = 30 }: { count?: number }) {
   }, [count]);
 
   useEffect(() => {
-    setParticles(generateParticles());
+    setTimeout(() => setParticles(generateParticles()), 0);
   }, [generateParticles]);
 
   if (particles.length === 0) return null;

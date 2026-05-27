@@ -69,6 +69,34 @@ const renderGemstoneSVG = (theme: ThemeType, isActive: boolean) => {
           <polygon points="3,8 8,3 12,12" fill="#10B981" />
         </svg>
       );
+    default:
+      return (
+        <svg viewBox="0 0 100 100" className={`w-12 h-12 transition-all duration-300 ${activeClass}`}>
+          <polygon points="50,5 85,25 95,65 65,95 35,95 5,65 15,25" fill="url(#grad-null)" />
+          <polygon points="50,5 85,25 95,65 65,95 35,95 5,65 15,25" fill="none" stroke="#4DFF4D" strokeWidth="2" />
+          <polygon points="50,15 75,30 85,60 60,85 40,85 15,60 25,30" fill="rgba(46, 139, 87, 0.4)" />
+          <defs>
+            <linearGradient id="grad-null" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3CB371" />
+              <stop offset="50%" stopColor="#2E8B57" />
+              <stop offset="100%" stopColor="#006400" />
+            </linearGradient>
+          </defs>
+        </svg>
+      );
+  }
+};
+
+const applyTheme = (theme: ThemeType, dispatchSync: boolean = true) => {
+  if (typeof window === "undefined") return;
+  const body = document.body;
+  body.classList.remove("theme-gold", "theme-algor", "theme-syntaxis", "theme-null");
+  body.classList.add(`theme-${theme}`);
+  localStorage.setItem("CLA_THEME", theme);
+
+  if (dispatchSync) {
+    const syncEvent = new CustomEvent("cla-theme-changed", { detail: { theme } });
+    window.dispatchEvent(syncEvent);
   }
 };
 
@@ -77,10 +105,10 @@ export default function GemstoneForge() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    setTimeout(() => setMounted(true), 0);
     const savedTheme = localStorage.getItem("CLA_THEME") as ThemeType;
     if (savedTheme && ["gold", "algor", "syntaxis", "null"].includes(savedTheme)) {
-      setActiveTheme(savedTheme);
+      setTimeout(() => setActiveTheme(savedTheme), 0);
       applyTheme(savedTheme, false);
     } else {
       applyTheme("syntaxis", false);
@@ -98,19 +126,6 @@ export default function GemstoneForge() {
       window.removeEventListener("cla-theme-changed", handleSync);
     };
   }, []);
-
-  const applyTheme = (theme: ThemeType, dispatchSync: boolean = true) => {
-    if (typeof window === "undefined") return;
-    const body = document.body;
-    body.classList.remove("theme-gold", "theme-algor", "theme-syntaxis", "theme-null");
-    body.classList.add(`theme-${theme}`);
-    localStorage.setItem("CLA_THEME", theme);
-
-    if (dispatchSync) {
-      const syncEvent = new CustomEvent("cla-theme-changed", { detail: { theme } });
-      window.dispatchEvent(syncEvent);
-    }
-  };
 
   const handleSelectTheme = (e: React.MouseEvent<HTMLButtonElement>, theme: ThemeType) => {
     setActiveTheme(theme);

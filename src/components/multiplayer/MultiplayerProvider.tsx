@@ -107,6 +107,7 @@ export function MultiplayerProvider({ children, currentUserId }: { children: Rea
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUserId, router]);
 
   const challengeFriend = async (friendId: string, missionId: string) => {

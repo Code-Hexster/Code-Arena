@@ -9,7 +9,7 @@ interface RankDisplayProps {
   currentLevel: number;
 }
 
-export default function RankDisplay({ totalXp, currentLevel }: RankDisplayProps) {
+export default function RankDisplay({ currentLevel }: RankDisplayProps) {
   const [isOpen, setIsOpen] = useState(false);
   const currentTitle = getLevelTitle(currentLevel);
 

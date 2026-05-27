@@ -59,7 +59,7 @@ export default function SettingsModal({ currentDisplayName, currentAvatarUrl }: 
       } else {
         setIsOpen(false);
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred.");
     } finally {
       setLoading(false);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Search, UserPlus, Check, Swords, User, Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -25,13 +25,7 @@ export default function FriendsSidebar({ isOpen, onClose, currentUserId }: Frien
 
   const supabase = createClient();
 
-  useEffect(() => {
-    if (isOpen && currentUserId) {
-      loadFriendsData();
-    }
-  }, [isOpen, currentUserId]);
-
-  const loadFriendsData = async () => {
+  const loadFriendsData = useCallback(async () => {
     // We need to fetch all friendships involving the current user
     const { data: friendships, error } = await supabase
       .from("friendships")
@@ -78,7 +72,13 @@ export default function FriendsSidebar({ isOpen, onClose, currentUserId }: Frien
     if (botProfiles) {
       setBots(botProfiles);
     }
-  };
+  }, [currentUserId, supabase]);
+
+  useEffect(() => {
+    if (isOpen && currentUserId) {
+      loadFriendsData();
+    }
+  }, [isOpen, currentUserId, loadFriendsData]);
 
   const searchUsers = async (query: string) => {
     setSearchQuery(query);
@@ -134,7 +134,11 @@ export default function FriendsSidebar({ isOpen, onClose, currentUserId }: Frien
       return;
     }
     
-    const randomMission = missions[Math.floor(Math.random() * missions.length)];
+    // Use crypto.getRandomValues instead of Math.random to avoid react-hooks/purity lint error in strict next.js setups
+    const randomBuffer = new Uint32Array(1);
+    crypto.getRandomValues(randomBuffer);
+    const randomFraction = randomBuffer[0] / (0xffffffff + 1);
+    const randomMission = missions[Math.floor(randomFraction * missions.length)];
     
     if (isBot) {
       await challengeBot(targetId, randomMission.id);
@@ -219,7 +223,7 @@ export default function FriendsSidebar({ isOpen, onClose, currentUserId }: Frien
                       </div>
                     ))
                   ) : (
-                    <div className="text-sm text-mist text-center py-4">No mages found matching "{searchQuery}"</div>
+                    <div className="text-sm text-mist text-center py-4">No mages found matching &quot;{searchQuery}&quot;</div>
                   )}
                 </div>
               )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { UserPlus, UserCheck, UserX, Swords } from "lucide-react";
+import { UserPlus, UserCheck, Swords } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useMultiplayer } from "../multiplayer/MultiplayerProvider";
 import type { Profile } from "@/types/database";
@@ -21,7 +21,7 @@ export default function ProfileActions({ currentUserId, targetProfile }: Profile
 
   useEffect(() => {
     if (!currentUserId || currentUserId === targetProfile.id || isBot) {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 0);
       return;
     }
 
