@@ -587,10 +587,10 @@ export default function MissionView({ mission, matchId, opponentId }: MissionVie
                     <svg className="strange-ring middle-geom" viewBox="0 0 300 300">
                       <g transform="translate(150, 150)">
                         <rect x="-75" y="-75" width="150" height="150" stroke="var(--energy-color)" strokeWidth="1.2" fill="none" strokeDasharray="6 4" />
-                        <rect x="-75" y="-75" width="150" height="150" stroke="var(--energy-color)" stroke-width="1.2" fill="none" strokeDasharray="6 4" transform="rotate(45)" />
+                        <rect x="-75" y="-75" width="150" height="150" stroke="var(--energy-color)" strokeWidth="1.2" fill="none" strokeDasharray="6 4" transform="rotate(45)" />
                         <circle cx="0" cy="0" r="105" stroke="var(--gold)" strokeWidth="1.5" fill="none" strokeDasharray="30 8 4 8" />
-                        <polygon points="0,-90 78,45 -78,45" stroke="var(--gold)" stroke-width="1" fill="none" opacity="0.6" />
-                        <polygon points="0,90 78,-45 -78,-45" stroke="var(--gold)" stroke-width="1" fill="none" opacity="0.6" />
+                        <polygon points="0,-90 78,45 -78,45" stroke="var(--gold)" strokeWidth="1" fill="none" opacity="0.6" />
+                        <polygon points="0,90 78,-45 -78,-45" stroke="var(--gold)" strokeWidth="1" fill="none" opacity="0.6" />
                       </g>
                     </svg>
 

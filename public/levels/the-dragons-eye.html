@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CSS Drawing Level 5</title>
+<link rel="stylesheet" href="/levels/magical-level.css">
+<style>
+  /* Target Shape Styling (Hidden from user code) */
+  #target-shape {
+    width: 100px;
+    height: 100px;
+    background-color: rgb(234, 179, 8); /* Tailwind yellow-500 */
+    border-radius: 50% 0 50% 0;
+  }
+</style>
+</head>
+<body>
+
+<div id="view-area">
+  <div class="view-pane">
+    <div class="pane-title text-mist">Target</div>
+    <div class="canvas">
+      <div id="target-shape"></div>
+    </div>
+  </div>
+  <div class="view-pane">
+    <div class="pane-title text-accent">Your Canvas</div>
+    <div class="canvas" id="user-canvas">
+      <div id="user-shape" class="shape"></div>
+    </div>
+  </div>
+  <style id="user-styles"></style>
+</div>
+
+<div id="editor-area">
+  <div id="instruction">
+    <span class="icon">✨</span>
+    <p>Replicate the <strong>Dragon's Eye</strong>. You will need <strong>width: 100px</strong>, <strong>height: 100px</strong>, <strong>background-color: #eab308</strong>, and <strong>border-radius: 50% 0 50% 0</strong>.</p>
+  </div>
+  <div id="editors">
+    <div class="editor-pane">
+      <div class="pane-header">HTML</div>
+      <textarea id="html-editor" spellcheck="false"><!-- Step 1: Create a div element -->
+<!-- Step 2: Give it an id of "user-shape" and class of "shape" -->
+<div id="user-shape" class="shape"></div>
+</textarea>
+    </div>
+    <div class="editor-pane">
+      <div class="pane-header">CSS</div>
+      <textarea id="css-editor" spellcheck="false">/* Match the Dragon's Eye! */
+.shape {
+  
+}
+</textarea>
+    </div>
+  </div>
+  <div id="controls">
+    <button class="btn btn-check" onclick="checkMatch()">Cast Spell</button>
+    <button class="btn btn-hint" onclick="showHint()">Consult Tome</button>
+    <span id="hint-text">Try: .shape { width:100px; height:100px; background-color:#eab308; border-radius:50% 0 50% 0; }</span>
+  </div>
+</div>
+
+<div id="success-overlay" class="overlay">
+  <h2>Spell Conjured!</h2>
+  <p>Your magic takes perfect shape.</p>
+  <button style="margin-top: 25px;" class="btn btn-check" onclick="window.parent.postMessage({ type: 'next-level' }, '*')">Return to Map</button>
+</div>
+
+<div id="fail-overlay" class="overlay">
+  <h2>Not Quite Right</h2>
+  <p id="fail-reason">Your shape doesn't match the target yet. Keep adjusting your CSS!</p>
+  <button class="btn btn-hint" onclick="document.getElementById('fail-overlay').classList.remove('show')">Try Again</button>
+</div>
+
+<script>
+// Live HTML Preview
+document.getElementById('html-editor').addEventListener('input', (e) => {
+  document.getElementById('user-canvas').innerHTML = e.target.value;
+});
+
+// Live CSS Preview
+document.getElementById('css-editor').addEventListener('input', (e) => {
+  document.getElementById('user-styles').textContent = e.target.value;
+});
+
+function showHint(){
+  document.getElementById('hint-text').style.display='inline';
+}
+
+function checkMatch() {
+  const target = getComputedStyle(document.getElementById('target-shape'));
+  const userShape = document.getElementById('user-shape');
+  const failReason = document.getElementById('fail-reason');
+  
+  if (!userShape) {
+    failReason.textContent = "Cannot find an element with id='user-shape'. Make sure your HTML has id='user-shape'.";
+    document.getElementById('fail-overlay').classList.add('show');
+    return;
+  }
+
+  const user = getComputedStyle(userShape);
+  
+  let match = true;
+  let reason = '';
+
+  if (user.width !== target.width) { match = false; reason = `Width is incorrect. Target is ${target.width}.`; }
+  else if (user.height !== target.height) { match = false; reason = `Height is incorrect. Target is ${target.height}.`; }
+  else if (user.backgroundColor !== target.backgroundColor) { match = false; reason = `Background color is incorrect.`; }
+  else if (user.borderRadius === '0px') { match = false; reason = `Border radius is incorrect.`; }
+
+  if (match) {
+    document.getElementById('success-overlay').classList.add('show');
+    fireConfetti();
+    // Send completion message to parent React app
+    window.parent.postMessage({ type: 'level-complete' }, '*');
+  } else {
+    failReason.textContent = reason;
+    document.getElementById('fail-overlay').classList.add('show');
+  }
+}
+
+function fireConfetti(){
+  const colors = ['#F4D068', '#fde047', '#34d399', '#8b5cf6'];
+  for(let i=0; i<60; i++){
+    const s = document.createElement('div');
+    s.className = 'spark';
+    s.style.left = (40 + Math.random() * 20) + 'vw';
+    s.style.top = (60 + Math.random() * 20) + 'vh';
+    s.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    s.style.animationDuration = (1 + Math.random() * 2) + 's';
+    s.style.animationDelay = (Math.random() * 0.5) + 's';
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(), 3500);
+  }
+}
+</script>
+</body>
+</html>
