@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Level 4: The Round Shield</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e8dcc8;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+
+#scene{position:relative;height:55vh;min-height:300px;background:linear-gradient(180deg,#1a0a2e,#2a1a4e 50%,#1a1a3e);overflow:hidden;border-bottom:3px solid #2d2d54;}
+#ground{position:absolute;bottom:0;width:100%;height:50px;background:linear-gradient(180deg,#2d3a4a,#1a2a3a);border-top:2px solid #4a5a6a;}
+.star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;opacity:0.5;}
+
+/* Cannon on left */
+#cannon{position:absolute;bottom:55px;left:40px;z-index:5;}
+.cannon-base{width:40px;height:25px;background:#555;border-radius:4px;position:relative;}
+.cannon-barrel{position:absolute;width:50px;height:16px;background:linear-gradient(180deg,#666,#444);border-radius:0 8px 8px 0;top:-4px;left:25px;}
+.cannon-wheel{width:20px;height:20px;background:#444;border:3px solid #666;border-radius:50%;position:absolute;bottom:-8px;left:5px;}
+.cannon-wheel:last-child{left:20px;}
+
+/* Fireball (circular projectile) */
+#fireball{position:absolute;bottom:80px;left:100px;width:24px;height:24px;background:radial-gradient(circle,#ff6b00,#ff4500,#cc2200);border-radius:50%;z-index:10;box-shadow:0 0 15px rgba(255,107,0,0.6),0 0 30px rgba(255,69,0,0.3);}
+#fireball::after{content:'';position:absolute;inset:-4px;border-radius:50%;background:radial-gradient(circle,rgba(255,200,0,0.3),transparent);animation:flicker 0.3s infinite alternate;}
+@keyframes flicker{0%{opacity:0.5;transform:scale(1);}100%{opacity:1;transform:scale(1.1);}}
+#fireball.flying{animation:flyBall 3.5s linear forwards;}
+@keyframes flyBall{0%{left:100px;}100%{left:calc(100% - 80px);}}
+#fireball.stopped{animation-play-state:paused;}
+
+/* Knight on right */
+#knight{position:absolute;bottom:50px;right:50px;z-index:5;transition:all 0.3s;}
+.k-head{width:26px;height:26px;background:#c0c0c0;border-radius:50%;margin-left:2px;border:2px solid #999;position:relative;}
+.k-head::before{content:'';position:absolute;top:-6px;left:3px;width:20px;height:8px;background:#888;border-radius:4px 4px 0 0;}
+.k-visor{position:absolute;top:10px;left:4px;width:18px;height:4px;background:#333;border-radius:1px;}
+.k-body{width:22px;height:32px;background:linear-gradient(180deg,#b0b0b0,#888);margin:0 auto;border-radius:3px;position:relative;}
+.k-legs{display:flex;gap:3px;margin-left:2px;}
+.k-leg{width:6px;height:20px;background:#999;border-radius:0 0 3px 3px;}
+.k-speech{position:absolute;top:-38px;left:-20px;background:rgba(255,255,255,0.9);color:#333;padding:3px 8px;border-radius:6px;font-size:10px;white-space:nowrap;}
+.k-speech::after{content:'';position:absolute;bottom:-5px;left:18px;border-left:5px solid transparent;border-right:5px solid transparent;border-top:5px solid rgba(255,255,255,0.9);}
+
+/* Hit */
+#knight.hit{animation:hitShake 0.5s ease;}
+#knight.hit .k-body{background:linear-gradient(180deg,#c44,#a33);}
+@keyframes hitShake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px) rotate(-3deg);}75%{transform:translateX(6px) rotate(3deg);}}
+
+/* Drop zone */
+#dropzone{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);width:80px;height:80px;border:2px dashed rgba(255,107,0,0.4);border-radius:50%;z-index:8;display:flex;align-items:center;justify-content:center;}
+#dropzone-label{color:rgba(255,107,0,0.5);font-size:9px;text-align:center;pointer-events:none;}
+#dropzone.has-content #dropzone-label{display:none;}
+#dropzone.success{border-color:#4ade80;box-shadow:0 0 20px rgba(74,222,128,0.3);}
+
+/* Target shape preview */
+#target-shape{position:absolute;top:12px;right:12px;background:rgba(20,20,40,0.8);border:1px solid #2d2d54;border-radius:12px;padding:12px;z-index:15;text-align:center;}
+#target-shape p{font-size:10px;color:#a0a0b8;margin-bottom:8px;}
+.target-preview{width:50px;height:50px;border-radius:50%;background:radial-gradient(circle,#3b82f6,#1d4ed8);border:3px solid #60a5fa;margin:0 auto;box-shadow:0 0 10px rgba(59,130,246,0.4);}
+
+#level-badge{position:absolute;top:12px;left:12px;background:rgba(255,107,0,0.2);border:1px solid rgba(255,107,0,0.4);padding:4px 12px;border-radius:20px;font-size:11px;color:#ff6b00;font-weight:600;z-index:15;letter-spacing:1px;}
+
+/* Editor */
+#editor-area{flex:1;display:flex;flex-direction:column;background:#0f0f1e;min-height:0;}
+#instruction{padding:10px 16px;background:linear-gradient(90deg,rgba(255,107,0,0.15),rgba(139,92,246,0.1));border-bottom:1px solid #2d2d54;display:flex;align-items:center;gap:10px;}
+#instruction .icon{font-size:20px;}
+#instruction p{font-size:13px;}
+#instruction p strong{color:#ff6b00;}
+#editors{display:flex;flex:1;min-height:0;}
+.editor-pane{flex:1;display:flex;flex-direction:column;min-height:0;}
+.editor-pane:first-child{border-right:1px solid #2d2d54;}
+.pane-header{padding:6px 12px;background:#141428;border-bottom:1px solid #2d2d54;font-size:11px;color:#8b5cf6;font-weight:600;text-transform:uppercase;letter-spacing:1px;}
+.editor-pane textarea{flex:1;background:#0c0b18;color:#e8dcc8;border:none;padding:12px;font-family:'JetBrains Mono','Consolas',monospace;font-size:13px;line-height:1.6;resize:none;outline:none;}
+#controls{padding:8px 16px;background:#141428;border-top:1px solid #2d2d54;display:flex;gap:10px;align-items:center;}
+.btn{padding:8px 20px;border:none;border-radius:6px;font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s;font-family:inherit;}
+.btn-run{background:linear-gradient(135deg,#4ade80,#22c55e);color:#0a0a1a;}
+.btn-run:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(74,222,128,0.3);}
+.btn-reset{background:#2d2d54;color:#e8dcc8;}
+.btn-hint{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);}
+#hint-text{display:none;color:#fbbf24;font-size:12px;margin-left:8px;padding:4px 10px;background:rgba(251,191,36,0.1);border-radius:4px;}
+
+.overlay{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(10,10,26,0.85);backdrop-filter:blur(4px);}
+.overlay.show{display:flex;}
+.overlay-card{text-align:center;padding:40px;border-radius:16px;max-width:400px;}
+.overlay-card h2{font-size:28px;margin-bottom:12px;}
+.overlay-card p{font-size:15px;color:#a0a0b8;margin-bottom:24px;}
+#success-overlay .overlay-card{background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(34,197,94,0.05));border:1px solid rgba(74,222,128,0.3);}
+#success-overlay h2{color:#4ade80;}
+#fail-overlay .overlay-card{background:linear-gradient(135deg,rgba(255,107,0,0.1),rgba(220,80,0,0.05));border:1px solid rgba(255,107,0,0.3);}
+#fail-overlay h2{color:#ff6b00;}
+.confetti{position:fixed;width:8px;height:8px;z-index:101;border-radius:2px;animation:confettiFall 2s linear forwards;}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0);opacity:1;}100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
+</style>
+</head>
+<body>
+<div id="scene">
+  <div id="level-badge">LEVEL 4</div>
+  <div id="ground"></div>
+
+  <!-- Target shape hint -->
+  <div id="target-shape">
+    <p>Match this shape!</p>
+    <div class="target-preview"></div>
+  </div>
+
+  <div id="cannon">
+    <div class="cannon-barrel"></div>
+    <div class="cannon-base">
+      <div class="cannon-wheel"></div>
+      <div class="cannon-wheel"></div>
+    </div>
+  </div>
+
+  <div id="fireball"></div>
+
+  <div id="knight">
+    <div class="k-speech">Defend me!</div>
+    <div class="k-head"><div class="k-visor"></div></div>
+    <div class="k-body"></div>
+    <div class="k-legs"><div class="k-leg"></div><div class="k-leg"></div></div>
+  </div>
+
+  <div id="dropzone">
+    <span id="dropzone-label">Shield<br>here</span>
+    <div id="player-shield" class="round-shield"></div>
+  </div>
+  <style id="user-styles"></style>
+</div>
+
+<div id="editor-area">
+  <div id="instruction">
+    <span class="icon">🛡️</span>
+    <p>A fireball approaches! The <strong>HTML shield</strong> is already placed. Write <strong>CSS</strong> for the <code>.round-shield</code> class to make it round with <strong>border-radius</strong> and big enough to deflect it!</p>
+  </div>
+  <div id="editors">
+    <div class="editor-pane">
+      <div class="pane-header">CSS</div>
+      <textarea id="css-editor" spellcheck="false">/* Make it round with border-radius! */
+.round-shield {
+  
+}
+</textarea>
+    </div>
+  </div>
+  <div id="controls">
+    <button class="btn btn-run" onclick="runCode()">▶ Run Code</button>
+    <button class="btn btn-reset" onclick="resetLevel()">↺ Reset</button>
+    <button class="btn btn-hint" onclick="showHint()">💡 Hint</button>
+    <span id="hint-text">Try: .round-shield { width:60px; height:60px; background-color:#3b82f6; border-radius:50%; border:3px solid #60a5fa; }</span>
+  </div>
+</div>
+
+<div id="success-overlay" class="overlay">
+  <div class="overlay-card">
+    <h2>🛡️ Deflected!</h2>
+    <p>Your round shield stopped the fireball! You learned <strong>border-radius</strong> and <strong>border</strong>.</p>
+    <button class="btn btn-run" onclick="nextLevel()">Next Level →</button>
+  </div>
+</div>
+<div id="fail-overlay" class="overlay">
+  <div class="overlay-card">
+    <h2>The fireball got through!</h2>
+    <p>Make your shield <strong>round</strong> using border-radius:50% and big enough to block the fireball.</p>
+    <button class="btn btn-run" onclick="closeFail()">Try Again</button>
+  </div>
+</div>
+
+<script>
+(function(){const s=document.getElementById('scene');for(let i=0;i<20;i++){const d=document.createElement('div');d.className='star';d.style.left=Math.random()*100+'%';d.style.top=Math.random()*50+'%';s.appendChild(d);}})();
+
+const fireball=document.getElementById('fireball');
+const dropzone=document.getElementById('dropzone');
+const knight=document.getElementById('knight');
+let animFrame,running=false;
+
+// Live CSS Preview
+document.getElementById('css-editor').addEventListener('input', (e) => {
+  document.getElementById('user-styles').textContent = e.target.value;
+  dropzone.classList.toggle('has-content', e.target.value.trim().length > 0);
+});
+
+function runCode(){
+  if(running)return;
+
+  fireball.classList.remove('flying','stopped');
+  void fireball.offsetHeight;
+  fireball.classList.add('flying');
+  knight.classList.remove('hit');
+  running=true;
+  checkCollision();
+}
+
+function checkCollision(){
+  if(!running)return;
+  const fRect=fireball.getBoundingClientRect();
+  const kRect=knight.getBoundingClientRect();
+  const blocks=dropzone.querySelectorAll(':not(#dropzone-label)');
+  for(const b of blocks){
+    const bRect=b.getBoundingClientRect();
+    if(bRect.width<4||bRect.height<4)continue;
+    // Check overlap and that the shield has border-radius (is round)
+    if(rectsOverlap(fRect,bRect)){
+      const cs=getComputedStyle(b);
+      const br=parseInt(cs.borderRadius)||0;
+      const isRound=br>=Math.min(bRect.width,bRect.height)*0.4;
+      if(isRound){
+        fireball.classList.add('stopped');
+        running=false;
+        onSuccess();
+        return;
+      }
+    }
+  }
+  if(rectsOverlap(fRect,kRect)){running=false;onFail();return;}
+  if(fRect.left>window.innerWidth){running=false;onFail();return;}
+  animFrame=requestAnimationFrame(checkCollision);
+}
+
+function rectsOverlap(a,b){return !(a.right<b.left||a.left>b.right||a.bottom<b.top||a.top>b.bottom);}
+
+function onSuccess(){
+  dropzone.classList.add('success');
+  document.getElementById('success-overlay').classList.add('show');
+  spawnConfetti();
+  try{window.parent.postMessage({type:'level-complete',level:4,xp:100},'*');}catch(e){}
+}
+function onFail(){
+  knight.classList.add('hit');
+  setTimeout(()=>document.getElementById('fail-overlay').classList.add('show'),600);
+}
+function closeFail(){document.getElementById('fail-overlay').classList.remove('show');knight.classList.remove('hit');fireball.classList.remove('flying','stopped');running=false;}
+function resetLevel(){
+  running=false;if(animFrame)cancelAnimationFrame(animFrame);
+  fireball.classList.remove('flying','stopped');knight.classList.remove('hit');
+  dropzone.classList.remove('has-content','success');
+  document.getElementById('user-styles').textContent='';
+  document.getElementById('css-editor').value='/* Make it round with border-radius! */\n.round-shield {\n  \n}\n';
+  document.getElementById('success-overlay').classList.remove('show');
+  document.getElementById('fail-overlay').classList.remove('show');
+  document.getElementById('hint-text').style.display='none';
+}
+function showHint(){document.getElementById('hint-text').style.display='inline';}
+function nextLevel(){window.location.href='css-ramparts-5.html';}
+function spawnConfetti(){const c=['#4ade80','#fbbf24','#a78bfa','#60a5fa','#f472b6'];for(let i=0;i<40;i++){const d=document.createElement('div');d.className='confetti';d.style.left=Math.random()*100+'%';d.style.background=c[Math.floor(Math.random()*c.length)];d.style.animationDelay=Math.random()*0.8+'s';d.style.width=(4+Math.random()*8)+'px';d.style.height=(4+Math.random()*8)+'px';document.body.appendChild(d);setTimeout(()=>d.remove(),2500);}}
+</script>
+</body>
+</html>

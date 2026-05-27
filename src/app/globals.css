@@ -1,26 +1,687 @@
 @import "tailwindcss";
 
+/* ============================================================
+   CODE LEARNING ARENA — Celestial Command Console Design System
+   ============================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-dark: #020205;
+  --gold: #F4D068;
+  --gold-glow: rgba(244, 208, 104, 0.35);
+  --gold-dim: rgba(244, 208, 104, 0.12);
+  
+  /* Default Energy Alignments (Syntaxis Blue) */
+  --energy-color: #3B82F6;
+  --energy-color-rgb: 59, 130, 246;
+  --energy-glow: rgba(59, 130, 246, 0.5);
+  --energy-dim: rgba(59, 130, 246, 0.12);
+  --energy-glow-heavy: rgba(59, 130, 246, 0.85);
+
+  --font-display-dec: 'Cinzel Decorative', serif;
+  --font-display: 'Cinzel', serif;
+  --font-serif: 'Cormorant Garamond', serif;
+  --font-body: 'Space Grotesk', sans-serif;
+  
+  --glass-bg: rgba(14, 14, 26, 0.7);
+  --glass-border: rgba(244, 208, 104, 0.2);
+  --glass-glow: rgba(0, 0, 0, 0.55);
+  --paper-bg: rgba(240, 230, 210, 0.95);
+
+  /* === Dynamic Energy Tailwind Tokens === */
+  --color-energy: var(--energy-color);
+  --color-energy-glow: var(--energy-glow);
+  --color-energy-dim: var(--energy-dim);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Theme Alignments */
+.theme-algor {
+  --energy-color: #EF4444;
+  --energy-color-rgb: 239, 68, 68;
+  --energy-glow: rgba(239, 68, 68, 0.5);
+  --energy-dim: rgba(239, 68, 68, 0.12);
+  --energy-glow-heavy: rgba(239, 68, 68, 0.85);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.theme-syntaxis {
+  --energy-color: #3B82F6;
+  --energy-color-rgb: 59, 130, 246;
+  --energy-glow: rgba(59, 130, 246, 0.5);
+  --energy-dim: rgba(59, 130, 246, 0.12);
+  --energy-glow-heavy: rgba(59, 130, 246, 0.85);
+}
+
+.theme-null {
+  --energy-color: #10B981;
+  --energy-color-rgb: 16, 185, 129;
+  --energy-glow: rgba(16, 185, 129, 0.5);
+  --energy-dim: rgba(16, 185, 129, 0.12);
+  --energy-glow-heavy: rgba(16, 185, 129, 0.85);
+}
+
+.theme-gold {
+  --energy-color: #F4D068;
+  --energy-color-rgb: 244, 208, 104;
+  --energy-glow: rgba(244, 208, 104, 0.5);
+  --energy-dim: rgba(244, 208, 104, 0.12);
+  --energy-glow-heavy: rgba(244, 208, 104, 0.85);
+}
+
+@theme {
+  /* === Core Dark Palette === */
+  --color-void: var(--bg-dark);
+  --color-abyss: #07060d;
+  --color-shadow: #141428;
+  --color-dusk: #1e1e3a;
+  --color-storm: #2d2d54;
+  --color-twilight: #3d3d6e;
+
+  /* === Gold Accents === */
+  --color-gold-300: #FFE395;
+  --color-gold-400: #FCD375;
+  --color-gold-500: var(--gold);
+  --color-gold-600: #D9B44A;
+
+  /* === Ember / Fire === */
+  --color-ember-400: #fb923c;
+  --color-ember-500: #f97316;
+  --color-ember-600: #ea580c;
+
+  /* === Arcane Purple (Restored) === */
+  --color-arcane-300: #c4b5fd;
+  --color-arcane-400: #a78bfa;
+  --color-arcane-500: #8b5cf6;
+  --color-arcane-600: #7c3aed;
+  --color-arcane-700: #6d28d9;
+
+  /* === Mana Blue (Restored) === */
+  --color-mana-300: #93c5fd;
+  --color-mana-400: #60a5fa;
+  --color-mana-500: #3b82f6;
+
+  /* === Heal Green (Restored) === */
+  --color-heal-300: #86efac;
+  --color-heal-400: #4ade80;
+  --color-heal-500: #22c55e;
+
+  /* === Danger Red (Restored) === */
+  --color-danger-400: #f87171;
+  --color-danger-500: #ef4444;
+
+  /* === Neutral Text === */
+  --color-parchment: #e8dcc8;
+  --color-mist: #94a3b8;
+  --color-smoke: #64748b;
+  --color-ash: #475569;
+
+  /* === Typography === */
+  --font-display-decorative: var(--font-display-dec), serif;
+  --font-display: var(--font-display), serif;
+  --font-serif: var(--font-serif), serif;
+  --font-body: var(--font-body), sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* === Border Radius === */
+  --radius-game: 12px;
+  --radius-card: 16px;
+  --radius-pill: 9999px;
+
+  /* === Custom Shadows === */
+  --shadow-glow-sm: 0 0 10px var(--energy-glow);
+  --shadow-glow: 0 0 20px var(--energy-glow);
+  --shadow-glow-lg: 0 0 40px var(--energy-glow-heavy);
+  --shadow-glow-gold: 0 0 20px var(--gold-glow);
+  --shadow-glow-gold-lg: 0 0 40px var(--gold-glow);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.45);
+  --shadow-card-hover: 0 8px 40px rgba(0, 0, 0, 0.7);
+
+  /* === Animations === */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-shimmer: shimmer 2s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 2.5s ease-in-out infinite;
+  --animate-slide-up: slide-up 0.5s ease-out;
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-spin-slow: spin 20s linear infinite;
+  --animate-spin-reverse: spin-reverse 15s linear infinite;
+}
+
+/* === Custom Keyframes === */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 8px var(--energy-glow)); }
+  50% { opacity: 0.75; filter: drop-shadow(0 0 20px var(--energy-glow-heavy)); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes wave-motion {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* === Base Styles === */
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-dark);
+  color: var(--color-parchment);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.8s ease;
+}
+
+/* === Scrollbar Styling === */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: #18182b;
+  border-radius: 4px;
+  border: 1px solid var(--glass-border);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--energy-color);
+  box-shadow: 0 0 10px var(--energy-glow);
+}
+
+/* === Selection Color === */
+::selection {
+  background: var(--energy-dim);
+  color: white;
+}
+
+/* === Tailwind v4 Utility Class Declarations === */
+@utility text-gradient-arcane {
+  background: linear-gradient(135deg, var(--energy-color), #FFF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@utility text-gradient-gold {
+  background: linear-gradient(135deg, var(--color-gold-300), var(--color-gold-500));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@utility bg-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(var(--energy-color-rgb), 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.02);
+  transition: border-color 0.8s ease;
+}
+
+@utility bg-glass-gold {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+}
+
+@utility glow-border {
+  border: 1.5px solid rgba(var(--energy-color-rgb), 0.25);
+  box-shadow: 0 0 15px var(--energy-dim), inset 0 0 15px rgba(var(--energy-color-rgb), 0.05);
+  transition: border-color 0.8s ease, box-shadow 0.8s ease;
+}
+
+@utility glow-border-gold {
+  border: 1.5px solid var(--glass-border);
+  box-shadow: 0 0 15px var(--gold-dim), inset 0 0 15px rgba(244, 208, 104, 0.05);
+}
+
+@utility rune-glow {
+  color: var(--energy-color);
+  text-shadow: 0 0 10px var(--energy-glow), 0 0 20px var(--energy-dim);
+  transition: color 0.8s ease, text-shadow 0.8s ease;
+}
+
+@utility rune-glow-gold {
+  color: var(--gold);
+  text-shadow: 0 0 10px var(--gold-glow), 0 0 20px var(--gold-dim);
+}
+
+@utility font-display-dec {
+  font-family: var(--font-display-dec), serif;
+}
+
+@utility font-serif-cormorant {
+  font-family: var(--font-serif), serif;
+  font-style: italic;
+}
+
+@utility page-transition-wrapper {
+  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@utility spell-scramble-text {
+  font-family: var(--font-display);
+  letter-spacing: 0.1em;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === Doctor Strange Magic Circle === */
+.strange-mandala-container {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 15px var(--energy-glow)) drop-shadow(0 0 8px rgba(244, 208, 104, 0.3));
+}
+
+.strange-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke-linecap: round;
+  transform-origin: center;
+  pointer-events: none;
+}
+
+.strange-ring-outer {
+  animation: spin 15s linear infinite;
+}
+
+.strange-ring-middle {
+  animation: spin-reverse 10s linear infinite;
+}
+
+.strange-ring-inner {
+  animation: spin 6s linear infinite;
+}
+
+.magic-circle-animal-wrap {
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.magic-circle-animal {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px var(--energy-color)) brightness(1.3) contrast(1.2);
+  animation: pulse-animal 2s ease-in-out infinite;
+}
+
+.strange-sparkle-dot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--color-gold-400, #F4D068);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--color-gold-400, #F4D068), 0 0 12px var(--color-gold-400, #F4D068);
+  pointer-events: none;
+}
+.strange-sparkle-dot.spark-1 { animation: orbit-spark-1 4s linear infinite; }
+.strange-sparkle-dot.spark-2 { animation: orbit-spark-2 5s linear infinite; }
+.strange-sparkle-dot.spark-3 { animation: orbit-spark-3 6s linear infinite; }
+
+@keyframes orbit-spark-1 {
+  0% { transform: rotate(0deg) translateX(120px) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: rotate(360deg) translateX(120px) rotate(-360deg); opacity: 0; }
+}
+@keyframes orbit-spark-2 {
+  0% { transform: rotate(120deg) translateX(105px) rotate(-120deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: rotate(480deg) translateX(105px) rotate(-480deg); opacity: 0; }
+}
+@keyframes orbit-spark-3 {
+  0% { transform: rotate(240deg) translateX(130px) rotate(-240deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: rotate(600deg) translateX(130px) rotate(-600deg); opacity: 0; }
+}
+
+@keyframes pulse-animal {
+  0%, 100% {
+    transform: scale(0.95);
+    filter: drop-shadow(0 0 8px var(--energy-color)) brightness(1.2);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 20px var(--energy-color)) drop-shadow(0 0 8px var(--color-gold-300)) brightness(1.5);
+    opacity: 1;
+  }
+}
+
+/* Success and Failure states for Doctor Strange magic circle */
+
+/* Success: Concentric rings transition to green, then scale down to 0 */
+.strange-mandala-container.success .strange-ring {
+  transition: transform 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045) 0.15s, opacity 0.4s ease 0.15s;
+  transform: scale(0);
+  opacity: 0;
+}
+
+.strange-mandala-container.success .magic-circle-animal-wrap {
+  transition: transform 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045) 0.15s, opacity 0.4s ease 0.15s;
+  transform: scale(0);
+  opacity: 0;
+}
+
+.strange-mandala-container.success .strange-ring circle,
+.strange-mandala-container.success .strange-ring rect,
+.strange-mandala-container.success .strange-ring polygon {
+  stroke: #10B981 !important;
+  transition: stroke 0.3s ease;
+}
+
+.strange-mandala-container.success .strange-ring text {
+  fill: #10B981 !important;
+  transition: fill 0.3s ease;
+}
+
+/* Success expanding shockwave flare */
+.strange-success-burst {
+  display: none;
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 4px solid #10B981;
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.8), inset 0 0 15px rgba(16, 185, 129, 0.4);
+  pointer-events: none;
+  z-index: 50;
+  transform: scale(0);
+  opacity: 0;
+}
+
+.strange-mandala-container.success .strange-success-burst {
+  display: block;
+  animation: success-burst 0.7s cubic-bezier(0.1, 0.8, 0.3, 1) 0.15s forwards;
+}
+
+@keyframes success-burst {
+  0% {
+    transform: scale(0.1);
+    opacity: 1;
+    border-width: 8px;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+
+/* Failure animation: Concentric rings violently wobble, fragment, and drift down */
+.strange-mandala-container.failure {
+  animation: container-shock 0.5s ease-out forwards;
+}
+
+.strange-mandala-container.failure .outer-runes {
+  animation: failure-shatter-outer 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+.strange-mandala-container.failure .middle-geom {
+  animation: failure-shatter-middle 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+.strange-mandala-container.failure .inner-shield {
+  animation: failure-shatter-inner 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+.strange-mandala-container.failure .magic-circle-animal-wrap {
+  animation: failure-shatter-inner 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+/* Make rings look broken and fractured in failure state */
+.strange-mandala-container.failure .strange-ring circle {
+  stroke-dasharray: 12 18 4 12 30 8 !important;
+  stroke-dashoffset: 40px !important;
+  stroke: #EF4444 !important;
+  transition: all 0.3s ease;
+}
+.strange-mandala-container.failure .strange-ring rect,
+.strange-mandala-container.failure .strange-ring polygon {
+  stroke-dasharray: 8 12 3 8 !important;
+  stroke-dashoffset: -20px !important;
+  stroke: #EF4444 !important;
+  transition: all 0.3s ease;
+}
+.strange-mandala-container.failure .strange-ring text {
+  fill: #EF4444 !important;
+  transition: all 0.3s ease;
+}
+
+/* Failure Crack Lines Overlay */
+.strange-failure-cracks {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  pointer-events: none;
+  z-index: 40;
+  filter: drop-shadow(0 0 8px #EF4444);
+  animation: crack-burst 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes crack-burst {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  10% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+
+/* Shards */
+.strange-shard {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 5px 15px 5px;
+  border-color: transparent transparent #EF4444 transparent;
+  opacity: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 0 5px #EF4444);
+  z-index: 50;
+}
+
+.strange-mandala-container.failure .strange-shard {
+  animation: shard-fly 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+.strange-mandala-container.failure .shard-1 { animation-name: shard-fly-1; }
+.strange-mandala-container.failure .shard-2 { animation-name: shard-fly-2; }
+.strange-mandala-container.failure .shard-3 { animation-name: shard-fly-3; }
+.strange-mandala-container.failure .shard-4 { animation-name: shard-fly-4; }
+.strange-mandala-container.failure .shard-5 { animation-name: shard-fly-5; }
+
+@keyframes shard-fly-1 { 
+  0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; filter: blur(0); }
+  100% { transform: translate(80px, -60px) rotate(140deg) scale(0.5); opacity: 0; filter: blur(3px); } 
+}
+@keyframes shard-fly-2 { 
+  0% { transform: translate(0, 0) rotate(72deg) scale(1.2); opacity: 1; filter: blur(0); }
+  100% { transform: translate(-70px, -80px) rotate(-110deg) scale(0.6); opacity: 0; filter: blur(3px); } 
+}
+@keyframes shard-fly-3 { 
+  0% { transform: translate(0, 0) rotate(144deg) scale(0.8); opacity: 1; filter: blur(0); }
+  100% { transform: translate(90px, 90px) rotate(220deg) scale(0.4); opacity: 0; filter: blur(3px); } 
+}
+@keyframes shard-fly-4 { 
+  0% { transform: translate(0, 0) rotate(216deg) scale(1.5); opacity: 1; filter: blur(0); }
+  100% { transform: translate(-80px, 70px) rotate(-240deg) scale(0.7); opacity: 0; filter: blur(3px); } 
+}
+@keyframes shard-fly-5 { 
+  0% { transform: translate(0, 0) rotate(288deg) scale(0.9); opacity: 1; filter: blur(0); }
+  100% { transform: translate(10px, -100px) rotate(300deg) scale(0.5); opacity: 0; filter: blur(3px); } 
+}
+
+
+/* Shrapnel Sparkles */
+.strange-mandala-container.failure .spark-1 {
+  animation: shrapnel-1 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards !important;
+}
+.strange-mandala-container.failure .spark-2 {
+  animation: shrapnel-2 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards !important;
+}
+.strange-mandala-container.failure .spark-3 {
+  animation: shrapnel-3 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards !important;
+}
+
+@keyframes container-shock {
+  0% { transform: scale(0.75); }
+  10% { transform: scale(0.85); }
+  25% { transform: scale(0.72); }
+  100% { transform: scale(0.75); }
+}
+
+@keyframes failure-shatter-outer {
+  0% {
+    transform: scale(1) rotate(0deg) skew(0deg) translate(0, 0);
+    opacity: 1;
+    filter: blur(0);
+  }
+  15% {
+    transform: scale(1.05) rotate(5deg) skew(5deg, 3deg) translate(-4px, -4px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.4) rotate(90deg) skew(25deg, 15deg) translate(50px, -50px);
+    opacity: 0;
+    filter: blur(8px);
+  }
+}
+
+@keyframes failure-shatter-middle {
+  0% {
+    transform: scale(1) rotate(0deg) skew(0deg) translate(0, 0);
+    opacity: 1;
+    filter: blur(0);
+  }
+  20% {
+    transform: scale(0.95) rotate(-8deg) skew(-8deg, -4deg) translate(6px, 6px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.5) rotate(-120deg) skew(-30deg, -20deg) translate(-60px, 60px);
+    opacity: 0;
+    filter: blur(10px);
+  }
+}
+
+@keyframes failure-shatter-inner {
+  0% {
+    transform: scale(1) rotate(0deg) skew(0deg) translate(0, 0);
+    opacity: 1;
+    filter: blur(0);
+  }
+  10% {
+    transform: scale(1.1) rotate(15deg) skew(10deg, -10deg) translate(-8px, 8px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.1) rotate(180deg) skew(45deg, -45deg) translate(30px, 80px);
+    opacity: 0;
+    filter: blur(12px);
+  }
+}
+
+@keyframes shrapnel-1 {
+  0% { transform: rotate(0deg) translateX(120px); opacity: 1; }
+  100% { transform: rotate(45deg) translateX(260px); opacity: 0; filter: blur(3px); }
+}
+@keyframes shrapnel-2 {
+  0% { transform: rotate(120deg) translateX(105px); opacity: 1; }
+  100% { transform: rotate(60deg) translateX(240px); opacity: 0; filter: blur(3px); }
+}
+@keyframes shrapnel-3 {
+  0% { transform: rotate(240deg) translateX(130px); opacity: 1; }
+  100% { transform: rotate(300deg) translateX(290px); opacity: 0; filter: blur(3px); }
+}
+
+/* Violent Text Shake for failure state */
+@keyframes violent-shake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-2px, -1px) rotate(-1deg); }
+  20% { transform: translate(1px, 2px) rotate(1deg); }
+  30% { transform: translate(-1px, -2px) rotate(-1deg); }
+  40% { transform: translate(2px, 1px) rotate(0deg); }
+  50% { transform: translate(-2px, 2px) rotate(1deg); }
+  60% { transform: translate(1px, -1px) rotate(-1deg); }
+  70% { transform: translate(-1px, 1px) rotate(0deg); }
+  80% { transform: translate(2px, -2px) rotate(1deg); }
+  95% { transform: translate(-1px, 1px) rotate(-1deg); }
+}
+
+.animate-shake {
+  animation: violent-shake 0.25s linear infinite;
+}
+
+.strange-failure-text {
+  color: #EF4444 !important;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.9), 0 0 20px rgba(239, 68, 68, 0.5) !important;
+}
+
+.strange-success-text {
+  color: #10B981 !important;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.9), 0 0 20px rgba(16, 185, 129, 0.5) !important;
 }

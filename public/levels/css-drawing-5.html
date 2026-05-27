@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CSS Drawing Level 5</title>
+<style>
+  :root {
+    --bg-color: #0f172a;
+    --panel-bg: #1e293b;
+    --text-color: #f8fafc;
+    --border-color: #334155;
+    --accent-color: #8b5cf6;
+    --success-color: #10b981;
+    --font-ui: system-ui, -apple-system, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    background: var(--bg-color); color: var(--text-color);
+    font-family: var(--font-ui);
+    display: flex; flex-direction: column;
+    height: 100vh; overflow: hidden;
+  }
+  
+  /* Split View Area */
+  #view-area {
+    display: flex;
+    flex: 1;
+    border-bottom: 2px solid var(--border-color);
+  }
+  .view-pane {
+    flex: 1;
+    display: flex; flex-direction: column;
+    border-right: 1px solid var(--border-color);
+    position: relative;
+  }
+  .view-pane:last-child { border-right: none; }
+  .pane-title {
+    position: absolute; top: 10px; left: 10px;
+    background: rgba(0,0,0,0.5); padding: 4px 8px;
+    border-radius: 4px; font-size: 12px; font-weight: bold;
+    text-transform: uppercase; letter-spacing: 1px; z-index: 10;
+  }
+  
+  .canvas {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    background-image: 
+      linear-gradient(45deg, #1e293b 25%, transparent 25%), 
+      linear-gradient(-45deg, #1e293b 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #1e293b 75%),
+      linear-gradient(-45deg, transparent 75%, #1e293b 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  }
+
+  /* Target Shape Styling (Hidden from user code) */
+  #target-shape {
+    width: 100px;
+    height: 100px;
+    background-color: rgb(234, 179, 8); /* Tailwind yellow-500 */
+    border-radius: 50% 0 50% 0;
+  }
+
+  /* Editor Area */
+  #editor-area {
+    height: 250px;
+    display: flex; flex-direction: column;
+    background: #000;
+  }
+  #instruction {
+    padding: 10px 15px; background: var(--panel-bg);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px; display: flex; align-items: center; gap: 10px;
+  }
+  .icon { font-size: 20px; }
+  #editors {
+    flex: 1; display: flex;
+  }
+  .editor-pane {
+    flex: 1; display: flex; flex-direction: column;
+  }
+  .pane-header {
+    background: var(--border-color); font-size: 12px;
+    padding: 4px 10px; font-family: var(--font-mono); color: #cbd5e1;
+  }
+  textarea {
+    flex: 1; background: #000; color: #a78bfa;
+    font-family: var(--font-mono); font-size: 14px;
+    padding: 10px; border: none; resize: none; outline: none;
+    line-height: 1.5;
+  }
+  
+  /* Controls */
+  #controls {
+    padding: 10px; background: var(--panel-bg);
+    display: flex; gap: 10px; align-items: center;
+    border-top: 1px solid var(--border-color);
+  }
+  .btn {
+    padding: 8px 16px; border: none; border-radius: 4px;
+    font-weight: bold; cursor: pointer; font-family: var(--font-ui);
+    transition: transform 0.1s, filter 0.2s;
+  }
+  .btn:active { transform: scale(0.95); }
+  .btn-check { background: var(--accent-color); color: white; }
+  .btn-check:hover { filter: brightness(1.2); }
+  .btn-hint { background: transparent; color: #94a3b8; border: 1px solid #475569; }
+  .btn-hint:hover { background: #334155; color: white; }
+  #hint-text { color: #fcd34d; font-size: 13px; font-family: var(--font-mono); display: none; }
+
+  /* Overlays */
+  .overlay {
+    position: absolute; inset: 0; background: rgba(15,23,42,0.9);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 100;
+  }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+  .overlay h2 { font-size: 32px; margin: 0 0 10px 0; }
+  .overlay p { font-size: 16px; margin: 0 0 20px 0; color: #94a3b8; }
+  #success-overlay h2 { color: var(--success-color); }
+  #fail-overlay h2 { color: #ef4444; }
+
+  /* Confetti */
+  .confetti {
+    position: absolute; width: 10px; height: 10px;
+    background-color: #f00; animation: fall linear forwards;
+  }
+  @keyframes fall {
+    to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div id="view-area">
+  <div class="view-pane">
+    <div class="pane-title text-mist">Target</div>
+    <div class="canvas">
+      <div id="target-shape"></div>
+    </div>
+  </div>
+  <div class="view-pane">
+    <div class="pane-title text-accent">Your Canvas</div>
+    <div class="canvas">
+      <div id="user-shape" class="shape"></div>
+    </div>
+  </div>
+  <style id="user-styles"></style>
+</div>
+
+<div id="editor-area">
+  <div id="instruction">
+    <span class="icon">👁️</span>
+    <p>Replicate the <strong>Dragon's Eye</strong>. Use an asymmetric <strong>border-radius</strong> (e.g., <code>50% 0 50% 0</code>) to create a leaf or eye shape.</p>
+  </div>
+  <div id="editors">
+    <div class="editor-pane">
+      <div class="pane-header">CSS</div>
+      <textarea id="css-editor" spellcheck="false">/* Match the yellow eye! */
+.shape {
+  
+}
+</textarea>
+    </div>
+  </div>
+  <div id="controls">
+    <button class="btn btn-check" onclick="checkMatch()">✓ Submit Match</button>
+    <button class="btn btn-hint" onclick="showHint()">💡 Hint</button>
+    <span id="hint-text">Try: .shape { width:100px; height:100px; background-color:#eab308; border-radius:50% 0 50% 0; }</span>
+  </div>
+</div>
+
+<div id="success-overlay" class="overlay">
+  <h2>Perfect Match!</h2>
+  <p>You have mastered the square.</p>
+</div>
+
+<div id="fail-overlay" class="overlay">
+  <h2>Not Quite Right</h2>
+  <p id="fail-reason">Your shape doesn't match the target yet. Keep adjusting your CSS!</p>
+  <button class="btn btn-hint" onclick="document.getElementById('fail-overlay').classList.remove('show')">Try Again</button>
+</div>
+
+<script>
+// Live CSS Preview
+document.getElementById('css-editor').addEventListener('input', (e) => {
+  document.getElementById('user-styles').textContent = e.target.value;
+});
+
+function showHint(){
+  document.getElementById('hint-text').style.display='inline';
+}
+
+function checkMatch() {
+  const target = getComputedStyle(document.getElementById('target-shape'));
+  const user = getComputedStyle(document.getElementById('user-shape'));
+  const failReason = document.getElementById('fail-reason');
+  
+  let match = true;
+  let reason = '';
+
+  if (user.width !== target.width) {
+    match = false; reason = `Width is incorrect. Target is ${target.width}.`;
+  } else if (user.height !== target.height) {
+    match = false; reason = `Height is incorrect. Target is ${target.height}.`;
+  } else if (user.backgroundColor !== target.backgroundColor) {
+    match = false; reason = `Background color is incorrect.`;
+  } else if (
+    user.borderTopLeftRadius !== target.borderTopLeftRadius ||
+    user.borderTopRightRadius !== target.borderTopRightRadius ||
+    user.borderBottomRightRadius !== target.borderBottomRightRadius ||
+    user.borderBottomLeftRadius !== target.borderBottomLeftRadius
+  ) {
+    match = false; reason = `Border radius is incorrect. Check your corners carefully!`;
+  }
+
+  if (match) {
+    document.getElementById('success-overlay').classList.add('show');
+    fireConfetti();
+    // Send completion message to parent React app
+    window.parent.postMessage({ type: 'level-complete' }, '*');
+  } else {
+    failReason.textContent = reason;
+    document.getElementById('fail-overlay').classList.add('show');
+  }
+}
+
+function fireConfetti(){
+  const colors = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+  for(let i=0; i<50; i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.top = '-10px';
+    c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    c.style.animationDuration = (Math.random() * 2 + 1) + 's';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(), 3000);
+  }
+}
+</script>
+</body>
+</html>

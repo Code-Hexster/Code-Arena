@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Level 2: Build the Bridge</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e8dcc8;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+
+#scene{position:relative;height:55vh;min-height:300px;background:linear-gradient(180deg,#0a1628,#1a2a4e 60%,#2a1a3e);overflow:hidden;border-bottom:3px solid #2d2d54;}
+.star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;opacity:0.6;}
+
+/* Platforms */
+.platform{position:absolute;bottom:0;height:120px;background:linear-gradient(180deg,#5a4a3a,#3a2a1a);border-top:4px solid #7a6a5a;}
+#plat-left{left:0;width:35%;}
+#plat-right{right:0;width:35%;}
+
+/* Lava/gap */
+#gap{position:absolute;bottom:0;left:35%;width:30%;height:60px;background:linear-gradient(180deg,#ff4500,#cc3300,#991100);animation:lavaGlow 2s infinite alternate;}
+@keyframes lavaGlow{0%{box-shadow:0 -10px 30px rgba(255,69,0,0.5);}100%{box-shadow:0 -10px 30px rgba(255,69,0,0.8);}}
+#gap::before{content:'';position:absolute;top:0;left:0;right:0;height:8px;background:linear-gradient(90deg,transparent,rgba(255,200,0,0.4),transparent);animation:lavaFlow 3s linear infinite;}
+@keyframes lavaFlow{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+
+/* Character on left */
+#hero{position:absolute;bottom:120px;left:calc(35% - 60px);z-index:5;transition:all 1.5s ease-in-out;}
+.h-head{width:24px;height:24px;background:#f4c27f;border-radius:50%;margin-left:4px;border:2px solid #d4a25f;}
+.h-body{width:16px;height:30px;background:#4a6aaa;margin:0 auto;border-radius:3px;}
+.h-legs{display:flex;gap:3px;margin-left:3px;}
+.h-leg{width:5px;height:20px;background:#3a5a9a;border-radius:0 0 2px 2px;}
+.h-speech{position:absolute;top:-35px;left:-15px;background:rgba(255,255,255,0.9);color:#333;padding:3px 8px;border-radius:6px;font-size:10px;white-space:nowrap;}
+
+/* Treasure on right */
+#treasure{position:absolute;bottom:124px;right:calc(35% - 50px);z-index:5;}
+.chest{width:30px;height:22px;background:linear-gradient(180deg,#fbbf24,#d4a00a);border:2px solid #b8860b;border-radius:3px 3px 0 0;position:relative;}
+.chest::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:8px;height:8px;background:#8B4513;border-radius:50%;border:1px solid #fbbf24;}
+.chest-base{width:34px;height:14px;background:#d4a00a;border:2px solid #b8860b;border-radius:0 0 3px 3px;margin-left:-2px;}
+.sparkle{position:absolute;color:#fbbf24;font-size:12px;animation:sparkAnim 1.5s infinite;}
+@keyframes sparkAnim{0%,100%{opacity:0;transform:scale(0.5);}50%{opacity:1;transform:scale(1);}}
+
+/* Bridge drop zone */
+#dropzone{position:absolute;bottom:100px;left:35%;width:30%;height:30px;border:2px dashed rgba(251,191,36,0.4);border-radius:4px;z-index:8;display:flex;align-items:center;justify-content:center;}
+#dropzone-label{color:rgba(251,191,36,0.5);font-size:10px;text-align:center;pointer-events:none;position:absolute;}
+#dropzone.has-content #dropzone-label{display:none;}
+#dropzone.success{border-color:#4ade80;box-shadow:0 0 20px rgba(74,222,128,0.3);}
+
+/* Hero walking */
+#hero.walking{left:calc(65% + 10px);bottom:120px;}
+
+#level-badge{position:absolute;top:12px;left:12px;background:rgba(251,191,36,0.2);border:1px solid rgba(251,191,36,0.4);padding:4px 12px;border-radius:20px;font-size:11px;color:#fbbf24;font-weight:600;z-index:5;letter-spacing:1px;}
+
+/* Editor */
+#editor-area{flex:1;display:flex;flex-direction:column;background:#0f0f1e;min-height:0;}
+#instruction{padding:10px 16px;background:linear-gradient(90deg,rgba(251,191,36,0.15),rgba(139,92,246,0.1));border-bottom:1px solid #2d2d54;display:flex;align-items:center;gap:10px;}
+#instruction .icon{font-size:20px;}
+#instruction p{font-size:13px;}
+#instruction p strong{color:#fbbf24;}
+#editors{display:flex;flex:1;min-height:0;}
+.editor-pane{flex:1;display:flex;flex-direction:column;min-height:0;}
+.editor-pane:first-child{border-right:1px solid #2d2d54;}
+.pane-header{padding:6px 12px;background:#141428;border-bottom:1px solid #2d2d54;font-size:11px;color:#8b5cf6;font-weight:600;text-transform:uppercase;letter-spacing:1px;}
+.editor-pane textarea{flex:1;background:#0c0b18;color:#e8dcc8;border:none;padding:12px;font-family:'JetBrains Mono','Consolas',monospace;font-size:13px;line-height:1.6;resize:none;outline:none;}
+#controls{padding:8px 16px;background:#141428;border-top:1px solid #2d2d54;display:flex;gap:10px;align-items:center;}
+.btn{padding:8px 20px;border:none;border-radius:6px;font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s;font-family:inherit;}
+.btn-run{background:linear-gradient(135deg,#4ade80,#22c55e);color:#0a0a1a;}
+.btn-run:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(74,222,128,0.3);}
+.btn-reset{background:#2d2d54;color:#e8dcc8;}
+.btn-hint{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);}
+#hint-text{display:none;color:#fbbf24;font-size:12px;margin-left:8px;padding:4px 10px;background:rgba(251,191,36,0.1);border-radius:4px;}
+
+.overlay{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(10,10,26,0.85);backdrop-filter:blur(4px);}
+.overlay.show{display:flex;}
+.overlay-card{text-align:center;padding:40px;border-radius:16px;max-width:400px;}
+.overlay-card h2{font-size:28px;margin-bottom:12px;}
+.overlay-card p{font-size:15px;color:#a0a0b8;margin-bottom:24px;}
+#success-overlay .overlay-card{background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(34,197,94,0.05));border:1px solid rgba(74,222,128,0.3);}
+#success-overlay h2{color:#4ade80;}
+#fail-overlay .overlay-card{background:linear-gradient(135deg,rgba(239,68,68,0.1),rgba(220,38,38,0.05));border:1px solid rgba(239,68,68,0.3);}
+#fail-overlay h2{color:#ef4444;}
+.confetti{position:fixed;width:8px;height:8px;z-index:101;border-radius:2px;animation:confettiFall 2s linear forwards;}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0);opacity:1;}100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
+</style>
+</head>
+<body>
+<div id="scene">
+  <div id="level-badge">LEVEL 2</div>
+  <div id="plat-left" class="platform"></div>
+  <div id="plat-right" class="platform"></div>
+  <div id="gap"></div>
+
+  <div id="hero">
+    <div class="h-speech">I need to cross!</div>
+    <div class="h-head"></div>
+    <div class="h-body"></div>
+    <div class="h-legs"><div class="h-leg"></div><div class="h-leg"></div></div>
+  </div>
+
+  <div id="treasure">
+    <div class="sparkle" style="top:-10px;left:-5px;">✦</div>
+    <div class="sparkle" style="top:-8px;right:-8px;animation-delay:0.5s;">✦</div>
+    <div class="chest"></div>
+    <div class="chest-base"></div>
+  </div>
+
+  <div id="dropzone">
+    <span id="dropzone-label">Build bridge here</span>
+    <div id="player-bridge" class="bridge"></div>
+  </div>
+  <style id="user-styles"></style>
+</div>
+
+<div id="editor-area">
+  <div id="instruction">
+    <span class="icon">🌉</span>
+    <p>The hero is trapped! The <strong>HTML bridge</strong> is already placed. Write <strong>CSS</strong> for the <code>.bridge</code> class to give it enough <strong>width</strong> and <strong>height</strong> to cross the lava.</p>
+  </div>
+  <div id="editors">
+    <div class="editor-pane">
+      <div class="pane-header">CSS</div>
+      <textarea id="css-editor" spellcheck="false">/* Style your bridge here */
+.bridge {
+  
+}
+</textarea>
+    </div>
+  </div>
+  <div id="controls">
+    <button class="btn btn-run" onclick="runCode()">▶ Run Code</button>
+    <button class="btn btn-reset" onclick="resetLevel()">↺ Reset</button>
+    <button class="btn btn-hint" onclick="showHint()">💡 Hint</button>
+    <span id="hint-text">Try: .bridge { width:100%; height:20px; background-color:brown; }</span>
+  </div>
+</div>
+
+<div id="success-overlay" class="overlay">
+  <div class="overlay-card">
+    <h2>🌉 Bridge Built!</h2>
+    <p>The hero crossed safely! You mastered <strong>width</strong> and <strong>height</strong> to span a gap.</p>
+    <button class="btn btn-run" onclick="nextLevel()">Next Level →</button>
+  </div>
+</div>
+<div id="fail-overlay" class="overlay">
+  <div class="overlay-card">
+    <h2>Bridge too small!</h2>
+    <p>The bridge needs to fill the gap. Make sure your div has enough <strong>width</strong> (try 100%) and some <strong>height</strong>.</p>
+    <button class="btn btn-run" onclick="closeFail()">Try Again</button>
+  </div>
+</div>
+
+<script>
+(function(){const s=document.getElementById('scene');for(let i=0;i<25;i++){const d=document.createElement('div');d.className='star';d.style.left=Math.random()*100+'%';d.style.top=Math.random()*50+'%';d.style.animationDelay=Math.random()*3+'s';s.appendChild(d);}})();
+
+const dropzone=document.getElementById('dropzone');
+const hero=document.getElementById('hero');
+
+// Live CSS Preview
+document.getElementById('css-editor').addEventListener('input', (e) => {
+  document.getElementById('user-styles').textContent = e.target.value;
+  dropzone.classList.toggle('has-content', e.target.value.trim().length > 0);
+});
+
+function runCode(){
+  hero.classList.remove('walking');
+
+  // Check: does the bridge fill at least 80% of the gap width and have height >= 8px?
+  setTimeout(()=>{
+    const blocks=dropzone.querySelectorAll(':not(#dropzone-label)');
+    const dzRect=dropzone.getBoundingClientRect();
+    let bridgeOk=false;
+    for(const b of blocks){
+      const r=b.getBoundingClientRect();
+      if(r.width>=dzRect.width*0.7 && r.height>=8){bridgeOk=true;break;}
+    }
+    if(bridgeOk){
+      dropzone.classList.add('success');
+      hero.classList.add('walking');
+      setTimeout(()=>{
+        document.getElementById('success-overlay').classList.add('show');
+        spawnConfetti();
+        try{window.parent.postMessage({type:'level-complete',level:2,xp:100},'*');}catch(e){}
+      },1600);
+    } else {
+      document.getElementById('fail-overlay').classList.add('show');
+    }
+  },100);
+}
+
+function resetLevel(){
+  hero.classList.remove('walking');
+  dropzone.classList.remove('has-content','success');
+  document.getElementById('user-styles').textContent='';
+  document.getElementById('css-editor').value='/* Style your bridge here */\n.bridge {\n  \n}\n';
+  document.getElementById('success-overlay').classList.remove('show');
+  document.getElementById('fail-overlay').classList.remove('show');
+  document.getElementById('hint-text').style.display='none';
+}
+
+function closeFail(){document.getElementById('fail-overlay').classList.remove('show');}
+function showHint(){document.getElementById('hint-text').style.display='inline';}
+function nextLevel(){window.location.href='css-ramparts-3.html';}
+
+function spawnConfetti(){const c=['#4ade80','#fbbf24','#a78bfa','#60a5fa','#f472b6'];for(let i=0;i<40;i++){const d=document.createElement('div');d.className='confetti';d.style.left=Math.random()*100+'%';d.style.background=c[Math.floor(Math.random()*c.length)];d.style.animationDelay=Math.random()*0.8+'s';d.style.width=(4+Math.random()*8)+'px';d.style.height=(4+Math.random()*8)+'px';document.body.appendChild(d);setTimeout(()=>d.remove(),2500);}}
+</script>
+</body>
+</html>

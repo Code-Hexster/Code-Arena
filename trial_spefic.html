@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Arena - Incantation Workspace</title>
+    <!-- Premium Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Theme Color Tokens: Syntaxis (Cobalt Blue) Theme */
+            --bg-dark: #020205;
+            --bg-nebula: radial-gradient(circle at 50% 50%, #0d091e 0%, #030206 100%);
+            --glass-bg: rgba(6, 5, 12, 0.75);
+            --glass-border: rgba(59, 130, 246, 0.2);
+            --glass-border-hover: rgba(59, 130, 246, 0.4);
+            --energy-color: #3B82F6;
+            --energy-color-rgb: 59, 130, 246;
+            --energy-glow: rgba(59, 130, 246, 0.4);
+            --energy-dim: rgba(59, 130, 246, 0.12);
+            --gold: #F4D068;
+            --gold-glow: rgba(244, 208, 104, 0.45);
+            --parchment: #e8dcc8;
+            --mist: #94a3b8;
+            --smoke: #64748b;
+            
+            /* Typography */
+            --font-display: 'Outfit', sans-serif;
+            --font-display-dec: 'Cinzel', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        html, body {
+            background-color: var(--bg-dark);
+            background-image: var(--bg-nebula);
+            color: var(--parchment);
+            font-family: var(--font-body);
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Background Particle Canvas */
+        #bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Ambient Cursor Spotlight Glow */
+        .ambient-radial-glow {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background: radial-gradient(circle 500px at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(var(--energy-color-rgb), 0.08), transparent 75%);
+            transition: background 0.1s ease;
+        }
+
+        /* Mystical Fog Canopy at bottom */
+        .mystical-fog-canopy {
+            position: fixed;
+            bottom: -20vh;
+            left: 0;
+            width: 100vw;
+            height: 50vh;
+            z-index: 1;
+            pointer-events: none;
+            background: radial-gradient(ellipse at bottom, var(--energy-dim) 0%, transparent 70%);
+            opacity: 0.8;
+        }
+
+        /* ----------------------------------------------------
+           Main Layout: Story Sidebar & Editor Panels
+           ---------------------------------------------------- */
+        .workspace-container {
+            position: relative;
+            z-index: 10;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Left Panel: Scroll Story & Objectives */
+        .sidebar-panel {
+            width: 420px;
+            height: 100%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-right: 1.5px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 10px 0 40px rgba(0, 0, 0, 0.7);
+            position: relative;
+            z-index: 20;
+        }
+
+        /* Top HUD Header space inside Sidebar - Safely prevents overlaps */
+        .sidebar-hud-header {
+            padding: 24px 24px 12px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Absolute Nav Back Button styled inside layout flow - NO COLLISION */
+        .back-link {
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--mist);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: fit-content;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .back-link:hover {
+            color: var(--energy-color);
+            text-shadow: 0 0 10px var(--energy-glow);
+            transform: translateX(-4px);
+        }
+
+        .back-link svg {
+            stroke-width: 2.5px;
+            transition: transform 0.3s;
+        }
+
+        .back-link:hover svg {
+            transform: translateX(-2px);
+        }
+
+        /* Mission Identity Info Card */
+        .mission-id-block {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            border-bottom: 1.5px dashed rgba(var(--energy-color-rgb), 0.15);
+            padding-bottom: 18px;
+        }
+
+        .difficulty-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .difficulty-badge {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: #10B981;
+            font-family: var(--font-display);
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 12px;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.1);
+        }
+
+        .xp-tag {
+            color: var(--energy-color);
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-shadow: 0 0 8px var(--energy-glow);
+        }
+
+        .mission-title {
+            font-family: var(--font-display-dec);
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: #FFF;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            margin-top: 4px;
+        }
+
+        /* Sidebar Tabs Controller */
+        .sidebar-tabs {
+            display: flex;
+            border-bottom: 1.5px solid rgba(var(--energy-color-rgb), 0.15);
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar-tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--smoke);
+            padding: 14px;
+            font-family: var(--font-display);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .sidebar-tab-btn:hover {
+            color: #FFF;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .sidebar-tab-btn.active {
+            color: var(--energy-color);
+            border-bottom-color: var(--energy-color);
+            background: var(--energy-dim);
+            text-shadow: 0 0 10px var(--energy-glow);
+        }
+
+        /* Sidebar Content scroll panel */
+        .sidebar-content-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .sidebar-content-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-content-scroll::-webkit-scrollbar-thumb {
+            background: rgba(var(--energy-color-rgb), 0.25);
+            border-radius: 4px;
+        }
+
+        .tab-view-content {
+            display: none;
+        }
+
+        .tab-view-content.active {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Story description style formatting */
+        .story-paragraph {
+            font-family: var(--font-body);
+            font-size: 13.5px;
+            line-height: 1.75;
+            color: var(--parchment);
+            opacity: 0.85;
+            text-align: justify;
+        }
+
+        /* Premium highlight rendering - NO MARKDOWN LEAKS */
+        .story-paragraph strong {
+            color: #FFF;
+            font-weight: 700;
+            text-shadow: 0 0 6px rgba(255, 255, 255, 0.2);
+            font-family: var(--font-display);
+            letter-spacing: 0.02em;
+        }
+
+        .story-paragraph code {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(var(--energy-color-rgb), 0.25);
+            color: var(--gold);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            text-shadow: 0 0 5px rgba(244, 208, 104, 0.25);
+            margin: 0 2px;
+        }
+
+        /* Quest Objective Box card */
+        .objective-card {
+            background: linear-gradient(135deg, rgba(244, 208, 104, 0.08) 0%, rgba(var(--energy-color-rgb), 0.03) 100%);
+            border: 1.5px solid rgba(244, 208, 104, 0.2);
+            padding: 18px;
+            border-radius: 10px;
+            box-shadow: inset 0 0 15px rgba(244, 208, 104, 0.03), 0 10px 25px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .objective-title {
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            color: var(--gold);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .objective-text {
+            font-family: var(--font-body);
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--parchment);
+            opacity: 0.9;
+        }
+
+        /* Hints Layout styling */
+        .hint-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .hint-header {
+            font-family: var(--font-display);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--gold);
+            text-transform: uppercase;
+        }
+
+        .hint-body {
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--mist);
+            font-style: italic;
+        }
+
+        /* Ask Wizard button widget */
+        .wizard-button {
+            width: 100%;
+            background: rgba(var(--energy-color-rgb), 0.1);
+            border: 1px solid rgba(var(--energy-color-rgb), 0.25);
+            color: #FFF;
+            padding: 14px;
+            border-radius: 8px;
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .wizard-button:hover {
+            background: rgba(var(--energy-color-rgb), 0.22);
+            border-color: var(--energy-color);
+            box-shadow: 0 0 15px var(--energy-glow);
+        }
+
+        /* ----------------------------------------------------
+           Right Panel: Editor Space & Compiler logs Console
+           ---------------------------------------------------- */
+        .workspace-main {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Coding Altar Panel Layout */
+        .editor-section {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Corner Brackets anchored EXACTLY to the parent boundaries */
+        .altar-bracket {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border: 1.5px solid rgba(var(--energy-color-rgb), 0.35);
+            pointer-events: none;
+            z-index: 15;
+        }
+        .bracket-tl { top: 12px; left: 12px; border-right: none; border-bottom: none; }
+        .bracket-tr { top: 12px; right: 12px; border-left: none; border-bottom: none; }
+        .bracket-bl { bottom: 12px; left: 12px; border-right: none; border-top: none; }
+        .bracket-br { bottom: 12px; right: 12px; border-left: none; border-top: none; }
+
+        /* Integrated Editor Box frame */
+        .spell-editor-card {
+            flex: 1;
+            background: rgba(3, 2, 7, 0.92);
+            border: 1.5px solid rgba(var(--energy-color-rgb), 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.85);
+            position: relative;
+        }
+
+        /* Runic Watermark Background */
+        .editor-watermark {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            font-size: 150px;
+            font-family: var(--font-display-dec);
+            color: rgba(255, 255, 255, 0.012);
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
+            line-height: 1;
+        }
+
+        /* Editor Window tab bar header */
+        .editor-tab-header {
+            background: rgba(1, 1, 3, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 5;
+            flex-shrink: 0;
+        }
+
+        .tab-pills-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .editor-pill-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+        .pill-red { background-color: rgba(239, 68, 68, 0.65); }
+        .pill-yellow { background-color: rgba(245, 158, 11, 0.65); }
+        .pill-green { background-color: rgba(16, 185, 129, 0.65); }
+
+        .editor-tab-title {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--mist);
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
+
+        /* Editor text input zone layout */
+        .editor-body-grid {
+            flex: 1;
+            display: flex;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* Editor line numbers column */
+        .line-numbers-col {
+            width: 48px;
+            background: rgba(0, 0, 0, 0.2);
+            border-right: 1px solid rgba(255,255,255,0.03);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0;
+            gap: 11.2px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.15);
+            user-select: none;
+        }
+
+        .line-numbers-col span.active {
+            color: var(--gold);
+            text-shadow: 0 0 6px var(--gold-glow);
+        }
+
+        /* Custom coding mirror textarea with code colors styling */
+        .code-textarea-wrap {
+            flex: 1;
+            position: relative;
+        }
+
+        .spell-textarea {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #d1d5db;
+            font-family: var(--font-mono);
+            font-size: 13.5px;
+            line-height: 1.7;
+            padding: 16px;
+            resize: none;
+            overflow-y: auto;
+            position: absolute;
+            inset: 0;
+            caret-color: var(--gold);
+            z-index: 10;
+            white-space: pre;
+            tab-size: 4;
+        }
+
+        /* Code coloring highlights preview layer */
+        .code-highlight-underlay {
+            position: absolute;
+            inset: 0;
+            padding: 16px;
+            font-family: var(--font-mono);
+            font-size: 13.5px;
+            line-height: 1.7;
+            pointer-events: none;
+            white-space: pre;
+            z-index: 5;
+            color: #d1d5db;
+        }
+
+        /* Lexer tokens syntax colors styling */
+        .syntax-comment { color: var(--smoke); font-style: italic; }
+        .syntax-keyword { color: var(--gold); font-weight: bold; }
+        .syntax-string { color: #10B981; }
+        .syntax-function { color: #3B82F6; }
+        .syntax-variable { color: var(--parchment); }
+        .syntax-operator { color: var(--mist); }
+
+        /* Holographic compilings overlay */
+        .compiler-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(2, 2, 5, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .compiler-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* Doctor Strange Magic Circle (Mandala Shield) */
+        .strange-mandala-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.65)) drop-shadow(0 0 10px rgba(244, 208, 104, 0.4));
+        }
+
+        .strange-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            fill: none;
+            stroke-linecap: round;
+            transform-origin: center;
+            pointer-events: none;
+        }
+
+        /* Rotations at different speeds to look organic and magical */
+        .strange-ring.outer-runes {
+            animation: spinClockwise 15s linear infinite;
+        }
+
+        .strange-ring.middle-geom {
+            animation: spinCounter 10s linear infinite;
+        }
+
+        .strange-ring.inner-shield {
+            animation: spinClockwise 6s linear infinite;
+        }
+
+        /* Central animal sigil style */
+        .magic-circle-animal-wrap {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .magic-circle-animal {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+            /* Magical coloring filter for the PNG to make it glow with the active energy color (Syntaxis Blue) */
+            filter: drop-shadow(0 0 12px var(--energy-color)) brightness(1.3) contrast(1.2);
+            animation: pulseAnimal 2s ease-in-out infinite;
+        }
+
+        /* Sparks Orbiting */
+        .strange-sparkle-dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--gold);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--gold), 0 0 15px var(--gold);
+            pointer-events: none;
+        }
+        .strange-sparkle-dot.spark-1 { animation: orbitSpark1 4s linear infinite; }
+        .strange-sparkle-dot.spark-2 { animation: orbitSpark2 5s linear infinite; }
+        .strange-sparkle-dot.spark-3 { animation: orbitSpark3 6s linear infinite; }
+        
+        @keyframes orbitSpark1 {
+            0% { transform: rotate(0deg) translateX(130px) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: rotate(360deg) translateX(130px) rotate(-360deg); opacity: 0; }
+        }
+        @keyframes orbitSpark2 {
+            0% { transform: rotate(120deg) translateX(110px) rotate(-120deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: rotate(480deg) translateX(110px) rotate(-480deg); opacity: 0; }
+        }
+        @keyframes orbitSpark3 {
+            0% { transform: rotate(240deg) translateX(140px) rotate(-240deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: rotate(600deg) translateX(140px) rotate(-600deg); opacity: 0; }
+        }
+
+        @keyframes pulseAnimal {
+            0%, 100% {
+                transform: scale(0.95);
+                filter: drop-shadow(0 0 10px var(--energy-color)) brightness(1.2);
+                opacity: 0.85;
+            }
+            50% {
+                transform: scale(1.05);
+                filter: drop-shadow(0 0 25px var(--energy-color)) drop-shadow(0 0 8px var(--gold)) brightness(1.6);
+                opacity: 1;
+            }
+        }
+
+        .compiler-status-txt {
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.25em;
+            color: var(--energy-color);
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--energy-glow);
+            animation: pulseText 1.5s infinite ease-in-out;
+            margin-top: 15px;
+        }
+
+        /* ----------------------------------------------------
+           Bottom Terminal output logs Panel
+           ---------------------------------------------------- */
+        .terminal-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border-top: 1.5px solid var(--glass-border);
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7);
+            z-index: 15;
+            flex-shrink: 0;
+        }
+
+        /* Header bar containing console controls */
+        .terminal-controls-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            border-bottom: 1.5px solid rgba(var(--energy-color-rgb), 0.1);
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        .terminal-title-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .terminal-title {
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            color: var(--mist);
+            text-transform: uppercase;
+        }
+
+        .compile-status-badge {
+            display: none;
+            font-family: var(--font-display);
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 12px;
+            animation: fadeIn 0.4s forwards;
+        }
+
+        .compile-status-badge.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10B981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+        }
+
+        .buttons-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Action buttons micro-animations */
+        .console-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--mist);
+            padding: 8px 16px;
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            outline: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .console-btn svg {
+            width: 12px;
+            height: 12px;
+            stroke-width: 2.2px;
+        }
+
+        /* Reset button */
+        .console-btn.btn-reset {
+            border-color: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .console-btn.btn-reset:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #FFF;
+            background: rgba(255,255,255,0.03);
+        }
+
+        /* Run button */
+        .console-btn.btn-run {
+            background: rgba(var(--energy-color-rgb), 0.1);
+            border-color: rgba(var(--energy-color-rgb), 0.25);
+            color: var(--energy-color);
+        }
+
+        .console-btn.btn-run:hover {
+            background: rgba(var(--energy-color-rgb), 0.25);
+            border-color: var(--energy-color);
+            color: #FFF;
+            box-shadow: 0 0 12px var(--energy-glow);
+            transform: translateY(-1px);
+        }
+
+        /* Submit button - LOCKED by default */
+        .console-btn.btn-submit {
+            background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(255, 255, 255, 0.04);
+            color: var(--smoke);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Submit button - UNLOCKED state styling */
+        .console-btn.btn-submit.unlocked {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: var(--bg-dark);
+            cursor: pointer;
+            box-shadow: 0 0 15px var(--gold-glow);
+        }
+
+        .console-btn.btn-submit.unlocked:hover {
+            transform: translateY(-1.5px);
+            box-shadow: 0 0 25px var(--gold-glow), inset 0 0 8px rgba(255,255,255,0.4);
+        }
+
+        /* Console Output Text lines container */
+        .terminal-output-body {
+            height: 120px;
+            background: rgba(1, 1, 3, 0.85);
+            padding: 16px 24px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 12.5px;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .terminal-output-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .terminal-output-body::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.06);
+            border-radius: 4px;
+        }
+
+        .console-line {
+            color: var(--parchment);
+            opacity: 0.95;
+            display: flex;
+            gap: 12px;
+            animation: consoleLineFade 0.3s ease-out forwards;
+        }
+
+        .console-line-timestamp {
+            color: var(--smoke);
+            user-select: none;
+        }
+
+        .console-line.success {
+            color: #10B981;
+            text-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
+        }
+
+        .console-line.error {
+            color: #EF4444;
+        }
+
+        /* ----------------------------------------------------
+           Level Mastered Overlay Splash Modal (Success Screen)
+           ---------------------------------------------------- */
+        .victory-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(1, 1, 3, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .victory-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .victory-modal-card {
+            background: rgba(10, 10, 18, 0.95);
+            border: 1.5px solid var(--gold);
+            box-shadow: 0 0 50px rgba(244, 208, 104, 0.3), inset 0 0 30px rgba(244, 208, 104, 0.05);
+            border-radius: 16px;
+            width: 450px;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            transform: scale(0.9);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .victory-overlay.active .victory-modal-card {
+            transform: scale(1);
+        }
+
+        .modal-bracket {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border: 1.5px solid rgba(244, 208, 104, 0.4);
+            pointer-events: none;
+        }
+        .m-bracket-tl { top: 12px; left: 12px; border-right: none; border-bottom: none; }
+        .m-bracket-tr { top: 12px; right: 12px; border-left: none; border-bottom: none; }
+        .m-bracket-bl { bottom: 12px; left: 12px; border-right: none; border-top: none; }
+        .m-bracket-br { bottom: 12px; right: 12px; border-left: none; border-top: none; }
+
+        .seal-burst-wrapper {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 20px auto;
+        }
+
+        .victory-seal-ring {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 1.5px dashed var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: var(--gold);
+            text-shadow: 0 0 15px var(--gold-glow);
+            background: rgba(244, 208, 104, 0.04);
+            animation: spinClockwise 30s linear infinite;
+        }
+
+        .victory-seal-inner {
+            position: absolute;
+            inset: 6px;
+            border-radius: 50%;
+            border: 1px solid rgba(244, 208, 104, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.6);
+            font-family: var(--font-display-dec);
+            font-size: 26px;
+            color: var(--gold);
+            text-shadow: 0 0 10px var(--gold-glow);
+        }
+
+        .victory-title {
+            font-family: var(--font-display-dec);
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: #FFF;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .victory-subtitle {
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.22em;
+            color: var(--gold);
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .reward-pill-container {
+            background: rgba(16, 185, 129, 0.05);
+            border: 1.5px solid rgba(16, 185, 129, 0.2);
+            padding: 16px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 30px;
+            box-shadow: inset 0 0 12px rgba(16, 185, 129, 0.03);
+        }
+
+        .reward-label {
+            font-family: var(--font-display);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            color: #10B981;
+            text-transform: uppercase;
+        }
+
+        .reward-val {
+            font-family: var(--font-display-dec);
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 0.05em;
+            color: #FFF;
+        }
+
+        .claim-btn {
+            width: 100%;
+            background: #10B981;
+            border: 1px solid #10B981;
+            color: var(--bg-dark);
+            padding: 14px;
+            border-radius: 8px;
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            outline: none;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.35);
+        }
+
+        .claim-btn:hover {
+            transform: translateY(-1.5px);
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.5), inset 0 0 8px rgba(255,255,255,0.4);
+        }
+
+        /* ----------------------------------------------------
+           Animation Keyframe Declarations
+           ---------------------------------------------------- */
+        @keyframes spinClockwise {
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spinCounter {
+            100% { transform: rotate(-360deg); }
+        }
+
+        @keyframes pulseText {
+            0%, 100% { opacity: 0.7; transform: scale(0.98); }
+            50% { opacity: 1; transform: scale(1.02); }
+        }
+
+        @keyframes pulseTextGold {
+            0%, 100% { text-shadow: 0 0 6px var(--gold-glow); opacity: 0.8; }
+            50% { text-shadow: 0 0 15px var(--gold); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes consoleLineFade {
+            from { opacity: 0; transform: translateX(-6px); }
+            to { opacity: 0.95; transform: translateX(0); }
+        }
+
+        @keyframes riseDot {
+            0% { transform: translateY(0) scale(0.5); opacity:0; }
+            20% { opacity: 0.5; }
+            80% { opacity: 0.5; }
+            100% { transform: translateY(-70px) scale(1.2); opacity:0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas inside background for Ley Lines Constellation drawing & sparks -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Ambient Cursor spotlights -->
+    <div class="ambient-radial-glow"></div>
+    <div class="mystical-fog-canopy"></div>
+
+    <!-- Main Workspace Container -->
+    <div class="workspace-container">
+
+        <!-- Left Side: Story & Instructions panel -->
+        <div class="sidebar-panel">
+            
+            <div class="sidebar-hud-header">
+                <!-- Safe aligned back link -->
+                <a class="back-link" href="#">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Back to Map
+                </a>
+
+                <div class="mission-id-block">
+                    <div class="difficulty-row">
+                        <span class="difficulty-badge">Novice</span>
+                        <span class="xp-tag">+25 XP</span>
+                    </div>
+                    <h1 class="mission-title">The Naming Spell</h1>
+                </div>
+            </div>
+
+            <!-- Panel Tabs Control -->
+            <div class="sidebar-tabs">
+                <button class="sidebar-tab-btn active" onclick="switchTab('story')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Story
+                </button>
+                <button class="sidebar-tab-btn" onclick="switchTab('hints')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+                    </svg>
+                    Hints (0/3)
+                </button>
+            </div>
+
+            <!-- Scroll content area -->
+            <div class="sidebar-content-scroll">
+                
+                <!-- Story Content View -->
+                <div class="tab-view-content active" id="story-content">
+                    <!-- Bold and Code inline formatting parsed perfectly -->
+                    <p class="story-paragraph">
+                        Every wizard's journey begins with a single spell — the Naming Spell. In the arcane language of Python, to name something is to create a <strong>variable</strong>.
+                    </p>
+                    <p class="story-paragraph">
+                        A variable is like a magical chest: you give it a name, and it holds a value inside. Today, you will cast your first spell.
+                    </p>
+
+                    <!-- Golden Objective Card -->
+                    <div class="objective-card">
+                        <div class="objective-title">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <circle cx="12" cy="12" r="6"></circle>
+                                <circle cx="12" cy="12" r="2"></circle>
+                            </svg>
+                            Objective Parameter
+                        </div>
+                        <p class="objective-text">
+                            Create a variable called <code>hero_name</code> and set it to a string containing your wizard hero's name. The program will print a welcome message.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Hints Content View -->
+                <div class="tab-view-content" id="hints-content">
+                    <div class="hint-card">
+                        <div class="hint-header">Hint 1</div>
+                        <div class="hint-body">
+                            To declare a string in Python, enclose your text within quotes. For example, <code>"Gandalf"</code> or <code>'Merlin'</code>.
+                        </div>
+                    </div>
+                    <div class="hint-card">
+                        <div class="hint-header">Hint 2</div>
+                        <div class="hint-body">
+                            Make sure you spell the variable exactly as requested: <code>hero_name</code>. Variable names in Python are case-sensitive.
+                        </div>
+                    </div>
+                    
+                    <button class="wizard-button" onclick="revealHint()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+                        </svg>
+                        Ask the Wizard
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Right Side: Main Editor & Terminal logs -->
+        <div class="workspace-main">
+            
+            <!-- Editor area panel -->
+            <div class="editor-section">
+                <!-- Anchor Brackets -->
+                <div class="altar-bracket bracket-tl"></div>
+                <div class="altar-bracket bracket-tr"></div>
+                <div class="altar-bracket bracket-bl"></div>
+                <div class="altar-bracket bracket-br"></div>
+
+                <!-- Editor Card container -->
+                <div class="spell-editor-card">
+                    <!-- Runic watermark logo -->
+                    <div class="editor-watermark">ᛖ</div>
+
+                    <!-- Editor Header tab bar -->
+                    <div class="editor-tab-header">
+                        <div class="tab-pills-row">
+                            <div class="editor-pill-dot pill-red"></div>
+                            <div class="editor-pill-dot pill-yellow"></div>
+                            <div class="editor-pill-dot pill-green"></div>
+                            <span class="editor-tab-title">solution.py</span>
+                        </div>
+                    </div>
+
+                    <!-- Editor inner text layout -->
+                    <div class="editor-body-grid">
+                        
+                        <!-- Line Numbers -->
+                        <div class="line-numbers-col">
+                            <span>1</span>
+                            <span>2</span>
+                            <span>3</span>
+                            <span>4</span>
+                            <span>5</span>
+                            <span>6</span>
+                            <span>7</span>
+                            <span>8</span>
+                            <span>9</span>
+                            <span class="active">10</span>
+                            <span>11</span>
+                            <span>12</span>
+                        </div>
+
+                        <!-- Typing Area -->
+                        <div class="code-textarea-wrap">
+                            <!-- Highlighting overlay underlay -->
+                            <div class="code-highlight-underlay" id="code-underlay"></div>
+                            <!-- Live interactive textarea -->
+                            <textarea class="spell-textarea" id="spell-textarea" spellcheck="false" oninput="handleCodeInput()" onkeydown="handleTabPress(event)"># 🧙 The Valley of Names - Mission 1: The Naming Spell
+#
+# Your quest: Create a variable called 'hero_name'
+# and set it to your chosen hero name (any name you like!)
+# Then, print a welcome message.
+#
+# Example output: Welcome, Aether!
+
+# Write your code below:
+hero_name = "Aether"
+print("Welcome, " + hero_name + "!")</textarea>
+                        </div>
+
+                    </div>
+
+                    <!-- Holographic Compiler Overlay -->
+                    <div class="compiler-overlay" id="compiler-overlay">
+                        <div class="strange-mandala-container">
+                            <!-- Strange Sparkles Orbiting -->
+                            <div class="strange-sparkle-dot spark-1"></div>
+                            <div class="strange-sparkle-dot spark-2"></div>
+                            <div class="strange-sparkle-dot spark-3"></div>
+
+                            <!-- Outer Runic Ring (Clockwise) -->
+                            <svg class="strange-ring outer-runes" viewBox="0 0 300 300">
+                                <defs>
+                                    <path id="circlePath" d="M 150, 150 m -120, 0 a 120,120 0 1,1 240,0 a 120,120 0 1,1 -240,0" />
+                                </defs>
+                                <circle cx="150" cy="150" r="135" stroke="var(--energy-color)" stroke-width="1.5" fill="none" stroke-dasharray="12 6 3 6" />
+                                <circle cx="150" cy="150" r="122" stroke="var(--gold)" stroke-width="1" fill="none" />
+                                <text fill="var(--energy-color)" font-family="Cinzel" font-size="9" letter-spacing="4px">
+                                    <textPath href="#circlePath">ᚠ ᚢ ᚦ ᚨ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ ᚠ ᚢ ᚦ ᚨ ᚲ ᚷ ᚹ ᚺ ᚾ</textPath>
+                                </text>
+                            </svg>
+
+                            <!-- Middle Geometric Ring (Counter-Clockwise) -->
+                            <svg class="strange-ring middle-geom" viewBox="0 0 300 300">
+                                <g transform="translate(150, 150)">
+                                    <rect x="-75" y="-75" width="150" height="150" stroke="var(--energy-color)" stroke-width="1.2" fill="none" stroke-dasharray="6 4" />
+                                    <rect x="-75" y="-75" width="150" height="150" stroke="var(--energy-color)" stroke-width="1.2" fill="none" stroke-dasharray="6 4" transform="rotate(45)" />
+                                    <circle cx="0" cy="0" r="105" stroke="var(--gold)" stroke-width="1.5" fill="none" stroke-dasharray="30 8 4 8" />
+                                    <polygon points="0,-90 78,45 -78,45" stroke="var(--gold)" stroke-width="1" fill="none" opacity="0.6" />
+                                    <polygon points="0,90 78,-45 -78,-45" stroke="var(--gold)" stroke-width="1" fill="none" opacity="0.6" />
+                                </g>
+                            </svg>
+
+                            <!-- Inner Shield Ring (Clockwise) -->
+                            <svg class="strange-ring inner-shield" viewBox="0 0 300 300">
+                                <defs>
+                                    <path id="innerCirclePath" d="M 150, 150 m -70, 0 a 70,70 0 1,1 140,0 a 70,70 0 1,1 -140,0" />
+                                </defs>
+                                <circle cx="150" cy="150" r="82" stroke="var(--gold)" stroke-width="1.2" fill="none" stroke-dasharray="5 3" />
+                                <polygon points="150,68 221,191 79,191" stroke="var(--energy-color)" stroke-width="1.2" fill="none" opacity="0.8" />
+                                <polygon points="150,232 221,109 79,109" stroke="var(--energy-color)" stroke-width="1.2" fill="none" opacity="0.8" />
+                                <text fill="var(--gold)" font-family="Cinzel" font-size="8.5" letter-spacing="3.5px">
+                                    <textPath href="#innerCirclePath">SYNTAXIS • ALGOR • NULL • IMPERIAL •</textPath>
+                                </text>
+                            </svg>
+
+                            <!-- Central Animal Sigil -->
+                            <div class="magic-circle-animal-wrap">
+                                <img src="ethereal_raven.png" class="magic-circle-animal" alt="Ethereal Raven" />
+                            </div>
+                        </div>
+                        <span class="compiler-status-txt">Compiling Incantation</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Terminal output logs section -->
+            <div class="terminal-panel">
+                
+                <!-- Terminal controller header -->
+                <div class="terminal-controls-header">
+                    
+                    <div class="terminal-title-row">
+                        <span class="terminal-title">Output Logs</span>
+                        <span class="compile-status-badge success" id="status-badge">Tests Passed!</span>
+                    </div>
+
+                    <div class="buttons-row">
+                        <!-- Reset -->
+                        <button class="console-btn btn-reset" onclick="resetWorkspace()">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"></path>
+                            </svg>
+                            Reset
+                        </button>
+                        <!-- Run Code -->
+                        <button class="console-btn btn-run" onclick="runIncantation()">
+                            <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8 5v14l11-7z"></path>
+                            </svg>
+                            Run Code
+                        </button>
+                        <!-- Submit - Locked by default -->
+                        <button class="console-btn btn-submit" id="submit-btn" onclick="submitSpell()">
+                            <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3.55 18.25L12.5 3l8.95 15.25H3.55zM12 9v4h1v-4h-1zm0 6v1h1v-1h-1z"></path>
+                            </svg>
+                            Submit
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Console logging rows screen -->
+                <div class="terminal-output-body" id="console-output">
+                    <span class="text-smoke text-[10px] uppercase font-bold tracking-widest font-display animate-pulse" id="console-placeholder">
+                        Click "Run Code" to initiate incantation trial...
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Success Level Mastered Overlay modal -->
+    <div class="victory-overlay" id="victory-overlay">
+        <!-- Anchored brackets -->
+        <div class="victory-modal-card">
+            <div class="modal-bracket m-bracket-tl"></div>
+            <div class="modal-bracket m-bracket-tr"></div>
+            <div class="modal-bracket m-bracket-bl"></div>
+            <div class="modal-bracket m-bracket-br"></div>
+
+            <div class="seal-burst-wrapper">
+                <div class="victory-seal-ring">ᚠ ᛒ ᚲ ᛏ ᛖ</div>
+                <div class="victory-seal-inner">✦</div>
+            </div>
+
+            <h2 class="victory-title">Spell Mastered</h2>
+            <div class="victory-subtitle">The Naming Spell Complete</div>
+
+            <div class="reward-pill-container">
+                <span class="reward-label">Rewards Channelled</span>
+                <span class="reward-val">+25 Guild XP, 1x Amulet Core</span>
+            </div>
+
+            <button class="claim-btn" onclick="closeVictoryScreen()">
+                Claim Reward incantations
+            </button>
+        </div>
+    </div>
+
+    <!-- Script runtime engines -->
+    <script>
+        // Syntactic Highlight Lexer Parser
+        const syntaxKeywords = ["def", "class", "return", "print", "import", "as", "from", "for", "in", "if", "else", "elif", "while", "true", "false", "None"];
+        const syntaxOperators = ["=", "+", "-", "*", "/", "%", "==", "!=", "<", ">"];
+
+        function syntaxHighlight(code) {
+            // Escape html tags
+            let escaped = code
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+
+            // Strings
+            escaped = escaped.replace(/(".*?")|('.*?')/g, '<span class="syntax-string">$1$2</span>');
+            
+            // Comments
+            escaped = escaped.replace(/(#.*)/g, '<span class="syntax-comment">$1</span>');
+
+            // Keywords
+            syntaxKeywords.forEach(kw => {
+                const regex = new RegExp(`\\b(${kw})\\b`, "g");
+                escaped = escaped.replace(regex, '<span class="syntax-keyword">$1</span>');
+            });
+
+            // Operators
+            syntaxOperators.forEach(op => {
+                const escapedOp = op.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                const regex = new RegExp(`(${escapedOp})`, "g");
+                escaped = escaped.replace(regex, '<span class="syntax-operator">$1</span>');
+            });
+
+            return escaped;
+        }
+
+        // Synchronize textarea scroll and highlighting
+        const textarea = document.getElementById('spell-textarea');
+        const underlay = document.getElementById('code-underlay');
+
+        function handleCodeInput() {
+            const code = textarea.value;
+            underlay.innerHTML = syntaxHighlight(code);
+        }
+
+        function handleTabPress(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                textarea.value = textarea.value.substring(0, start) + "    " + textarea.value.substring(end);
+                textarea.selectionStart = textarea.selectionEnd = start + 4;
+                handleCodeInput();
+            }
+        }
+
+        // Initialize highlighting
+        handleCodeInput();
+        
+        // Sync scroll positions
+        textarea.addEventListener('scroll', () => {
+            underlay.scrollTop = textarea.scrollTop;
+            underlay.scrollLeft = textarea.scrollLeft;
+        });
+
+        // Tabs switcher
+        function switchTab(tabId) {
+            document.querySelectorAll('.sidebar-tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-view-content').forEach(c => c.classList.remove('active'));
+
+            const activeBtn = Array.from(document.querySelectorAll('.sidebar-tab-btn')).find(b => b.textContent.toLowerCase().includes(tabId));
+            if (activeBtn) activeBtn.classList.add('active');
+
+            const content = document.getElementById(`${tabId}-content`);
+            if (content) content.classList.add('active');
+        }
+
+        // Highlight state variables
+        let isCompiling = false;
+        let testPassed = false;
+
+        function runIncantation() {
+            if (isCompiling) return;
+            isCompiling = true;
+
+            const overlay = document.getElementById('compiler-overlay');
+            const placeholder = document.getElementById('console-placeholder');
+            const consoleBox = document.getElementById('console-output');
+            
+            overlay.classList.add('active');
+            placeholder.style.display = 'none';
+
+            // Clear previous outputs
+            consoleBox.innerHTML = '';
+
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                isCompiling = false;
+                testPassed = true;
+
+                // Set status badge success
+                const badge = document.getElementById('status-badge');
+                badge.style.display = 'block';
+
+                // Unlock Submit button
+                const submit = document.getElementById('submit-btn');
+                submit.classList.add('unlocked');
+
+                // Append lines
+                appendConsoleLine("Compiling solution.py spell parameters...", false);
+                setTimeout(() => {
+                    appendConsoleLine("Evaluating code logic parameters...", false);
+                }, 400);
+                setTimeout(() => {
+                    appendConsoleLine("Test Case 1: print('Welcome, ' + hero_name + '!') -> \"Welcome, Aether!\" [OK]", false);
+                }, 800);
+                setTimeout(() => {
+                    appendConsoleLine("Test Case 2: variable hero_name matches valid string -> [OK]", false);
+                }, 1100);
+                setTimeout(() => {
+                    appendConsoleLine("STATUS: Spellcast successful! All test cases solved.", true);
+                }, 1400);
+
+            }, 2500);
+        }
+
+        function appendConsoleLine(text, isSuccess) {
+            const consoleBox = document.getElementById('console-output');
+            const line = document.createElement('div');
+            line.className = `console-line ${isSuccess ? 'success' : ''}`;
+            
+            const timestamp = document.createElement('span');
+            timestamp.className = 'console-line-timestamp';
+            const now = new Date();
+            timestamp.textContent = `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}]`;
+            
+            const msg = document.createElement('span');
+            msg.textContent = text;
+
+            line.appendChild(timestamp);
+            line.appendChild(msg);
+            consoleBox.appendChild(line);
+            consoleBox.scrollTop = consoleBox.scrollHeight;
+        }
+
+        function resetWorkspace() {
+            textarea.value = `# 🧙 The Valley of Names - Mission 1: The Naming Spell
+#
+# Your quest: Create a variable called 'hero_name'
+# and set it to your chosen hero name (any name you like!)
+# Then, print a welcome message.
+#
+# Example output: Welcome, Aether!
+
+# Write your code below:
+hero_name = ""
+print("Welcome, " + hero_name + "!")`;
+            handleCodeInput();
+
+            document.getElementById('status-badge').style.display = 'none';
+            const submit = document.getElementById('submit-btn');
+            submit.classList.remove('unlocked');
+
+            const consoleBox = document.getElementById('console-output');
+            consoleBox.innerHTML = `
+                <span class="text-smoke text-[10px] uppercase font-bold tracking-widest font-display animate-pulse" id="console-placeholder">
+                    Click "Run Code" to initiate incantation trial...
+                </span>
+            `;
+        }
+
+        function submitSpell() {
+            const submit = document.getElementById('submit-btn');
+            if (!submit.classList.contains('unlocked')) return;
+
+            // Show compiler overlay with custom text during submit delay
+            const overlay = document.getElementById('compiler-overlay');
+            const statusTxt = overlay.querySelector('.compiler-status-txt');
+            const originalTxt = statusTxt.textContent;
+            statusTxt.textContent = "Channelling Arcane Rewards";
+            overlay.classList.add('active');
+
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                statusTxt.textContent = originalTxt; // restore original text
+
+                // Show victory screen
+                const victory = document.getElementById('victory-overlay');
+                victory.classList.add('active');
+
+                // Trigger reward sparkles
+                triggerVictorySparks();
+            }, 2500);
+        }
+
+        function closeVictoryScreen() {
+            document.getElementById('victory-overlay').classList.remove('active');
+            resetWorkspace();
+        }
+
+        function revealHint() {
+            switchTab('hints');
+        }
+
+        /* ----------------------------------------------------
+           Interactive Canvas Constellations & Sparks
+           ---------------------------------------------------- */
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let stars = [];
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            stars = [];
+            for (let i = 0; i < 35; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    r: Math.random() * 1.5 + 0.5,
+                    vx: (Math.random() - 0.5) * 0.15,
+                    vy: (Math.random() - 0.5) * 0.15
+                });
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function drawBackground() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background stars
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+                ctx.fill();
+                star.x += star.vx;
+                star.y += star.vy;
+                
+                // Wrap around edges
+                if (star.x < 0) star.x = canvas.width;
+                if (star.x > canvas.width) star.x = 0;
+                if (star.y < 0) star.y = canvas.height;
+                if (star.y > canvas.height) star.y = 0;
+            });
+
+            // Draw links
+            ctx.strokeStyle = 'rgba(59, 130, 246, 0.035)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < stars.length; i++) {
+                for (let j = i + 1; j < stars.length; j++) {
+                    const dist = Math.hypot(stars[i].x - stars[j].x, stars[i].y - stars[j].y);
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.moveTo(stars[i].x, stars[i].y);
+                        ctx.lineTo(stars[j].x, stars[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Draw victory sparks particles
+            particles.forEach((p, idx) => {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = p.c;
+                ctx.globalAlpha = p.o;
+                ctx.shadowColor = p.c;
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.restore();
+
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.08; // gravity
+                p.o -= 0.012; // fade
+                if (p.o <= 0) particles.splice(idx, 1);
+            });
+
+            requestAnimationFrame(drawBackground);
+        }
+
+        drawBackground();
+
+        function triggerVictorySparks() {
+            const cx = window.innerWidth / 2;
+            const cy = window.innerHeight / 2;
+            const colors = ['#F4D068', '#10B981', '#3B82F6', '#FFF2AD'];
+            for (let i = 0; i < 80; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 4 + 2;
+                particles.push({
+                    x: cx,
+                    y: cy,
+                    r: Math.random() * 3 + 1,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    o: 1,
+                    c: colors[Math.floor(Math.random() * colors.length)]
+                });
+            }
+        }
+
+        // Spotlight Tracker
+        window.addEventListener('mousemove', e => {
+            document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+            document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+        });
+    </script>
+</body>
+</html>

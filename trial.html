@@ -1,0 +1,2163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codex Academica — Arcane Command Console</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700;900&family=Cormorant+Garamond:ital,wght@1,500;1,700&family=Space+Grotesk:wght@300;400;600;700&display=swap');
+
+        /* Dynamic Magipunk CSS System */
+        :root {
+            --bg-dark: #020205;
+            --bg-nebula: radial-gradient(circle at 50% 50%, rgba(30, 20, 60, 0.4) 0%, #020205 80%);
+            --gold: #F4D068;
+            --gold-glow: rgba(244, 208, 104, 0.35);
+            --gold-dim: rgba(244, 208, 104, 0.15);
+            
+            /* Energy Alignments (Syntaxis Blue default) */
+            --energy-color: #3B82F6;
+            --energy-glow: rgba(59, 130, 246, 0.5);
+            --energy-dim: rgba(59, 130, 246, 0.15);
+            --energy-glow-heavy: rgba(59, 130, 246, 0.85);
+            
+            --font-display-dec: 'Cinzel Decorative', serif;
+            --font-display: 'Cinzel', serif;
+            --font-serif: 'Cormorant Garamond', serif;
+            --font-body: 'Space Grotesk', sans-serif;
+            
+            --glass-bg: rgba(14, 14, 26, 0.7);
+            --glass-border: rgba(244, 208, 104, 0.2);
+            --glass-glow: rgba(0, 0, 0, 0.5);
+            --paper-bg: rgba(240, 230, 210, 0.95);
+        }
+
+        /* House Themes */
+        .theme-algor {
+            --energy-color: #EF4444;
+            --energy-glow: rgba(239, 68, 68, 0.5);
+            --energy-dim: rgba(239, 68, 68, 0.15);
+            --energy-glow-heavy: rgba(239, 68, 68, 0.85);
+        }
+
+        .theme-syntaxis {
+            --energy-color: #3B82F6;
+            --energy-glow: rgba(59, 130, 246, 0.5);
+            --energy-dim: rgba(59, 130, 246, 0.15);
+            --energy-glow-heavy: rgba(59, 130, 246, 0.85);
+        }
+
+        .theme-null {
+            --energy-color: #10B981;
+            --energy-glow: rgba(16, 185, 129, 0.5);
+            --energy-dim: rgba(16, 185, 129, 0.15);
+            --energy-glow-heavy: rgba(16, 185, 129, 0.85);
+        }
+
+        .theme-gold {
+            --energy-color: #F4D068;
+            --energy-glow: rgba(244, 208, 104, 0.5);
+            --energy-dim: rgba(244, 208, 104, 0.15);
+            --energy-glow-heavy: rgba(244, 208, 104, 0.85);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: var(--bg-nebula);
+            color: #E2E8F0;
+            font-family: var(--font-body);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            perspective: 1200px;
+        }
+
+        /* ----------------------------------------------------
+           Interactive Canvas layers (Stardust & Shockwaves)
+           ---------------------------------------------------- */
+        #astral-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .ambient-radial-glow {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), var(--energy-dim) 0%, transparent 60%);
+            pointer-events: none;
+            transition: background 0.4s ease;
+        }
+
+        /* ----------------------------------------------------
+           Premium Cosmic Nav HUD
+           ---------------------------------------------------- */
+        .cosmic-hud {
+            position: fixed;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 92%;
+            max-width: 1400px;
+            height: 85px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px) saturate(140%);
+            border: 1.5px solid var(--glass-border);
+            box-shadow: 
+                0 20px 45px rgba(0,0,0,0.85),
+                0 0 25px rgba(0,0,0,0.4),
+                inset 0 0 15px rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 45px;
+            z-index: 100;
+            transition: border-color 0.8s ease;
+        }
+
+        /* Intricate Runic Corner Brackets on HUD */
+        .hud-bracket {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--gold);
+            pointer-events: none;
+        }
+        .bracket-tl { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+        .bracket-tr { top: -2px; right: -2px; border-left: none; border-bottom: none; }
+        .bracket-bl { bottom: -2px; left: -2px; border-right: none; border-top: none; }
+        .bracket-br { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+
+        .hud-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+        }
+
+        .logo-sigil-box {
+            position: relative;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-ring {
+            position: absolute;
+            inset: 0;
+            border: 1.5px solid var(--gold);
+            border-radius: 50%;
+            animation: spinClockwise 15s linear infinite;
+        }
+        .logo-ring-dashed {
+            position: absolute;
+            inset: 4px;
+            border: 1.2px dashed var(--energy-color);
+            border-radius: 50%;
+            animation: spinCounter 10s linear infinite;
+            transition: border-color 0.8s ease;
+        }
+
+        .logo-center {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 0 10px var(--gold-glow);
+            z-index: 2;
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-title {
+            font-family: var(--font-display-dec);
+            font-size: 16px;
+            letter-spacing: 0.25em;
+            color: #FFF;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+
+        .logo-subtitle {
+            font-family: var(--font-serif);
+            font-size: 11px;
+            font-style: italic;
+            color: var(--energy-color);
+            letter-spacing: 0.15em;
+            transition: color 0.8s ease;
+        }
+
+        /* Holographic Nav Tabs */
+        .hud-tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .hud-tab-item {
+            font-family: var(--font-display);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            background: transparent;
+            border: 1px solid transparent;
+        }
+
+        .hud-tab-item:hover {
+            color: #FFF;
+            background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .hud-tab-item.active {
+            color: var(--energy-color);
+            background: var(--energy-dim);
+            border-color: rgba(59, 130, 246, 0.2);
+            text-shadow: 0 0 12px var(--energy-glow);
+        }
+
+        .hud-tab-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 15%;
+            right: 15%;
+            height: 2px;
+            background: var(--energy-color);
+            box-shadow: 0 0 10px var(--energy-color);
+            border-radius: 2px;
+        }
+
+        /* Glass Mana Core XP indicator */
+        .mana-core-widget {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            cursor: pointer;
+        }
+
+        .mana-core-sphere {
+            position: relative;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid var(--gold);
+            box-shadow: 
+                0 0 15px var(--gold-glow),
+                inset 0 0 12px rgba(255,255,255,0.05);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mana-liquid-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 74%; /* Representing 740/1000 XP */
+            background: linear-gradient(0deg, rgba(var(--energy-color), 0.8) 0%, var(--energy-color) 100%);
+            box-shadow: 0 0 15px var(--energy-glow-heavy);
+            transition: all 0.8s ease;
+            filter: hue-rotate(0deg);
+        }
+
+        /* Bubble effect in liquid core */
+        .mana-liquid-fill::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -50%;
+            width: 200%;
+            height: 10px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 40%;
+            animation: waveMotion 4s linear infinite;
+        }
+
+        .mana-core-sphere:hover .mana-liquid-fill {
+            transform: scale(1.05);
+            filter: brightness(1.2);
+        }
+
+        .core-text-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .core-lvl-label {
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 900;
+            color: var(--gold);
+            letter-spacing: 0.1em;
+        }
+
+        .core-xp-val {
+            font-family: monospace;
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: bold;
+        }
+
+        /* ----------------------------------------------------
+           Global Deck Content Wrappers
+           ---------------------------------------------------- */
+        .deck-wrapper {
+            max-width: 1400px;
+            margin: 145px auto 40px auto;
+            padding: 0 45px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .tab-panel {
+            display: none;
+            animation: paneEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes paneEntrance {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ----------------------------------------------------
+           TAB 1: Workbench (Incantation Altar)
+           ---------------------------------------------------- */
+        .workbench-layout {
+            display: grid;
+            grid-template-columns: 1.25fr 0.75fr;
+            gap: 40px;
+        }
+
+        /* Glass Hextech Altar Panel */
+        .altar-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid var(--glass-border);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.85);
+            border-radius: 10px;
+            padding: 35px;
+            position: relative;
+            min-height: 560px;
+            display: flex;
+            flex-direction: column;
+            transition: border-color 0.8s ease;
+        }
+
+        .altar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1.5px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        .altar-title {
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gold);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        .incantation-tabs {
+            display: flex;
+            gap: 12px;
+        }
+
+        .incantation-chip {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(244, 208, 104, 0.15);
+            color: #94a3b8;
+            padding: 8px 18px;
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .incantation-chip:hover, .incantation-chip.active {
+            color: #FFF;
+            border-color: var(--energy-color);
+            background: var(--energy-dim);
+            text-shadow: 0 0 10px var(--energy-glow);
+        }
+
+        /* Magic Coding Mirror (Text Editor) */
+        .spell-editor-box {
+            position: relative;
+            flex: 1;
+            min-height: 280px;
+            background: #010103;
+            border: 1.5px solid rgba(255,255,255,0.03);
+            border-radius: 6px;
+            padding: 24px;
+            overflow: hidden;
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.95);
+        }
+
+        .spell-editor-textarea {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #94a3b8;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            line-height: 1.7;
+            resize: none;
+            white-space: pre;
+            overflow-y: auto;
+        }
+
+        /* Scramble overlay for spell compiling */
+        .spell-compiling-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(1, 1, 3, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            z-index: 5;
+        }
+
+        .spell-compiling-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .compiling-rune-spin {
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+
+        .compiling-text {
+            font-family: var(--font-display);
+            font-size: 14px;
+            color: var(--energy-color);
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            animation: pulseText 1.5s ease-in-out infinite;
+        }
+
+        /* Incantation Controls Footer */
+        .altar-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        /* Premium Runic Cast Button */
+        .cast-ritual-btn {
+            background: linear-gradient(135deg, var(--gold) 0%, #d4af37 100%);
+            color: #020205;
+            border: 1px solid #7c6130;
+            padding: 16px 36px;
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: 12px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 
+                0 10px 25px rgba(0, 0, 0, 0.5),
+                0 0 15px rgba(244, 208, 104, 0.2),
+                inset 0 1px 1px rgba(255,255,255,0.3);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cast-ritual-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .cast-ritual-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 12px 30px rgba(0, 0, 0, 0.6),
+                0 0 25px var(--gold-glow);
+            filter: brightness(1.08);
+        }
+
+        .cast-ritual-btn:hover::before {
+            left: 100%;
+        }
+
+        /* Mystic Portal SVG animation controls */
+        .altar-sigil-rings {
+            width: 90px;
+            height: 90px;
+            position: relative;
+        }
+
+        .ring-path-svg {
+            position: absolute;
+            inset: 0;
+            fill: none;
+            stroke: var(--energy-color);
+            stroke-width: 1.2;
+            opacity: 0.4;
+            transform-origin: center;
+            transition: stroke 0.8s ease, opacity 0.4s ease;
+        }
+
+        .ring-path-svg.outer { animation: spinClockwise 25s linear infinite; }
+        .ring-path-svg.middle { animation: spinCounter 16s linear infinite; }
+        .ring-path-svg.inner { animation: spinClockwise 8s linear infinite; stroke: var(--gold); }
+
+        .compiling .ring-path-svg {
+            opacity: 1;
+            stroke-width: 2;
+            filter: drop-shadow(0 0 8px var(--energy-color));
+        }
+        .compiling .ring-path-svg.outer { animation: spinClockwise 1.5s linear infinite; }
+        .compiling .ring-path-svg.middle { animation: spinCounter 1.2s linear infinite; }
+        .compiling .ring-path-svg.inner { animation: spinClockwise 0.8s linear infinite; }
+
+        /* Quest Parchment Scroll Card */
+        .quest-scroll {
+            background-color: var(--paper-bg);
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.15) 0%, rgba(0, 0, 0, 0.05) 100%),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M0 0h100v100H0z' fill='%23000' fill-opacity='.015'/%3E%3C/svg%3E");
+            border: 2px solid #8e7355;
+            border-radius: 8px;
+            box-shadow: 
+                0 25px 60px rgba(0,0,0,0.9),
+                inset 0 0 40px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+            color: #2c1a04;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 560px;
+            position: relative;
+        }
+
+        /* Torn paper effect or burned edge styling */
+        .quest-scroll::before {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            border: 1px dashed rgba(142, 115, 85, 0.35);
+            pointer-events: none;
+        }
+
+        .scroll-title-bar {
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            border-bottom: 2px dashed rgba(142, 115, 85, 0.3);
+            padding-bottom: 16px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .quest-difficulty {
+            font-family: var(--font-body);
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 0.1em;
+            color: #991b1b;
+            border: 1px solid rgba(153, 27, 27, 0.3);
+            padding: 3px 10px;
+            border-radius: 3px;
+            background: rgba(153, 27, 27, 0.05);
+        }
+
+        .quest-instructions {
+            font-family: var(--font-serif);
+            font-size: 19px;
+            line-height: 1.8;
+            color: #3f2c16;
+            flex: 1;
+        }
+
+        .objective-badge {
+            margin-top: 25px;
+            background: rgba(142, 115, 85, 0.08);
+            border-left: 3px solid #8e7355;
+            padding: 16px;
+            font-family: var(--font-body);
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.6;
+        }
+
+        /* Compiled Output Monitor */
+        .output-monitor {
+            height: 140px;
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px dashed rgba(142, 115, 85, 0.3);
+            border-radius: 6px;
+            padding: 16px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #4a341e;
+            margin-top: 30px;
+            overflow-y: auto;
+        }
+
+        .console-line {
+            margin-bottom: 6px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .console-time {
+            color: rgba(142, 115, 85, 0.7);
+        }
+
+        .console-text.success { color: #166534; font-weight: bold; }
+        .console-text.error { color: #991b1b; font-weight: bold; }
+
+        /* ----------------------------------------------------
+           TAB 2: Ley Lines Map (Celestial Constellation Grid)
+           ---------------------------------------------------- */
+        .map-layout {
+            display: grid;
+            grid-template-columns: 1.25fr 0.75fr;
+            gap: 40px;
+        }
+
+        .celestial-map-card {
+            height: 560px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid var(--glass-border);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.85);
+            transition: border-color 0.8s ease;
+        }
+
+        #map-lines-canvas {
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+        }
+
+        /* Floating Constellation Stars */
+        .constellation-star {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 10;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .star-core-element {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--energy-color);
+            border: 2.5px solid #FFF;
+            box-shadow: 0 0 15px var(--energy-glow-heavy);
+            transition: all 0.4s;
+        }
+
+        .star-aurora {
+            position: absolute;
+            inset: 0;
+            border: 1px dashed var(--energy-color);
+            border-radius: 50%;
+            animation: spinClockwise 12s linear infinite;
+            opacity: 0.5;
+            transition: all 0.4s;
+        }
+
+        .constellation-star:hover {
+            transform: translate(-50%, -50%) scale(1.25);
+        }
+
+        .constellation-star:hover .star-core-element {
+            box-shadow: 0 0 25px #FFF, 0 0 35px var(--energy-glow-heavy);
+            transform: scale(1.1);
+        }
+
+        .constellation-star:hover .star-aurora {
+            opacity: 0.9;
+            inset: -4px;
+        }
+
+        /* Completed Star State */
+        .constellation-star.completed .star-core-element {
+            background: var(--gold);
+            box-shadow: 0 0 20px var(--gold-glow);
+        }
+        .constellation-star.completed .star-aurora {
+            border-color: var(--gold);
+        }
+
+        /* Locked Star State */
+        .constellation-star.locked {
+            cursor: not-allowed;
+        }
+        .constellation-star.locked .star-core-element {
+            background: #4b5563;
+            border-color: #374151;
+            box-shadow: none;
+        }
+        .constellation-star.locked .star-aurora {
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Star Labels */
+        .star-text-label {
+            position: absolute;
+            top: 36px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            white-space: nowrap;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+            transition: color 0.3s;
+        }
+
+        .constellation-star:hover .star-text-label {
+            color: #FFF;
+        }
+
+        /* ----------------------------------------------------
+           TAB 3: Legends (Champions Pantheon)
+           ---------------------------------------------------- */
+        .legends-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+
+        /* Podium Column containing top 3 magical champions */
+        /* Podium Column containing top 3 magical champions */
+        .podium-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 35px;
+            height: 390px;
+            margin-bottom: 30px;
+        }
+
+        /* 3D Holo Cards for champions */
+        .holo-card-pedestal {
+            width: 260px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.01) 0%, rgba(255,255,255,0.03) 100%);
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            position: relative;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-style: preserve-3d;
+            z-index: 10;
+        }
+
+        /* Ambient glows and height mappings */
+        .place-1 {
+            height: 350px;
+            border-color: var(--gold);
+            --glow-color: rgba(244, 208, 104, 0.22);
+            --hover-border: #FFE395;
+            box-shadow: 0 0 30px rgba(244, 208, 104, 0.12), 0 25px 50px rgba(0,0,0,0.8);
+        }
+        .place-2 {
+            height: 310px;
+            border-color: var(--energy-color);
+            --glow-color: rgba(59, 130, 246, 0.2);
+            --hover-border: #93c5fd;
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.1), 0 25px 50px rgba(0,0,0,0.8);
+        }
+        .place-3 {
+            height: 280px;
+            border-color: #f97316;
+            --glow-color: rgba(249, 115, 22, 0.22);
+            --hover-border: #fdba74;
+            box-shadow: 0 0 25px rgba(249, 115, 22, 0.1), 0 25px 50px rgba(0,0,0,0.8);
+        }
+
+        /* High-intensity ambient glowing backplates */
+        .holo-card-pedestal::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: radial-gradient(circle at 50% 30%, var(--glow-color) 0%, transparent 70%);
+            opacity: 0.6;
+            z-index: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .holo-card-pedestal::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--energy-color), transparent);
+            box-shadow: 0 0 15px var(--energy-color);
+            z-index: 3;
+        }
+
+        .place-1::after {
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            box-shadow: 0 0 15px var(--gold);
+        }
+
+        .place-3::after {
+            background: linear-gradient(90deg, transparent, #f97316, transparent);
+            box-shadow: 0 0 15px #f97316;
+        }
+
+        /* Rotating Runic Sigils */
+        .runic-sigil {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            height: 180px;
+            pointer-events: none;
+            opacity: 0.15;
+            z-index: 1;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .holo-card-pedestal:hover .runic-sigil {
+            opacity: 0.4;
+            transform: translateX(-50%) rotate(45deg) scale(1.05);
+        }
+
+        .runic-sigil svg {
+            width: 100%;
+            height: 100%;
+            animation: rotateSigil 28s linear infinite;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.5;
+        }
+
+        .place-1 .runic-sigil { color: var(--gold); }
+        .place-2 .runic-sigil { color: var(--energy-color); }
+        .place-3 .runic-sigil { color: #f97316; }
+
+        /* Rising Sparkle Particles Container */
+        .sparkle-fountain {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            border-radius: inherit;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .sparkle-dot {
+            position: absolute;
+            bottom: -10px;
+            width: 3.5px;
+            height: 3.5px;
+            background: currentColor;
+            border-radius: 50%;
+            animation: riseSparkle 4.2s infinite linear;
+            opacity: 0;
+        }
+
+        .place-1 .sparkle-dot { color: var(--gold); }
+        .place-2 .sparkle-dot { color: var(--energy-color); }
+        .place-3 .sparkle-dot { color: #f97316; }
+
+        .sparkle-dot:nth-child(1) { left: 15%; animation-delay: 0s; animation-duration: 3.6s; }
+        .sparkle-dot:nth-child(2) { left: 35%; animation-delay: 1.4s; animation-duration: 4.5s; }
+        .sparkle-dot:nth-child(3) { left: 55%; animation-delay: 0.6s; animation-duration: 3.9s; }
+        .sparkle-dot:nth-child(4) { left: 75%; animation-delay: 2.3s; animation-duration: 4.8s; }
+        .sparkle-dot:nth-child(5) { left: 88%; animation-delay: 0.9s; animation-duration: 3.3s; }
+
+        /* Glossy Shimmer sweeps */
+        .pedestal-shimmer {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                125deg,
+                transparent 30%,
+                rgba(255, 255, 255, 0.08) 45%,
+                rgba(255, 255, 255, 0.2) 50%,
+                rgba(255, 255, 255, 0.08) 55%,
+                transparent 70%
+            );
+            background-size: 200% 200%;
+            background-position: -200% -200%;
+            transition: background-position 0s;
+            pointer-events: none;
+            z-index: 4;
+            border-radius: inherit;
+        }
+
+        .holo-card-pedestal:hover .pedestal-shimmer {
+            background-position: 200% 200%;
+            transition: background-position 1.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Floating Avatars */
+        .pedestal-aura {
+            position: absolute;
+            top: -45px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--energy-dim) 30%, transparent 70%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            border: 1.5px solid var(--energy-color);
+            transition: all 0.3s;
+            animation: floatAvatar 4s ease-in-out infinite;
+            z-index: 5;
+        }
+
+        .place-1 .pedestal-aura {
+            background: radial-gradient(circle, var(--gold-dim) 30%, transparent 70%);
+            border-color: var(--gold);
+            width: 96px;
+            height: 96px;
+            top: -55px;
+            animation-delay: 0s;
+            box-shadow: 0 0 20px var(--gold-glow);
+        }
+
+        .place-2 .pedestal-aura {
+            animation-delay: 0.6s;
+            box-shadow: 0 0 20px var(--energy-glow);
+        }
+
+        .place-3 .pedestal-aura {
+            border-color: #f97316;
+            background: radial-gradient(circle, rgba(249, 115, 22, 0.15) 30%, transparent 70%);
+            animation-delay: 1.2s;
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+        }
+
+        .pedestal-avatar {
+            width: 90%;
+            height: 90%;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #0d0d18;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+        .place-1 .pedestal-avatar {
+            font-size: 32px;
+        }
+
+        .pedestal-rank-tag {
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #020205;
+            border: 1.5px solid var(--gold);
+            color: var(--gold);
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: bold;
+            padding: 4px 14px;
+            border-radius: 20px;
+            letter-spacing: 0.1em;
+            box-shadow: 0 0 10px var(--gold-dim);
+            z-index: 6;
+        }
+
+        .place-2 .pedestal-rank-tag {
+            border-color: var(--energy-color);
+            color: var(--energy-color);
+            box-shadow: 0 0 10px var(--energy-dim);
+        }
+
+        .place-3 .pedestal-rank-tag {
+            border-color: #f97316;
+            color: #f97316;
+            box-shadow: 0 0 10px rgba(249, 115, 22, 0.15);
+        }
+
+        .pedestal-name {
+            font-family: var(--font-display);
+            font-size: 15px;
+            font-weight: 700;
+            color: #FFF;
+            margin-top: 15px;
+            letter-spacing: 0.1em;
+            text-shadow: 0 0 5px rgba(0,0,0,0.6);
+            z-index: 3;
+        }
+
+        .pedestal-xp {
+            font-family: monospace;
+            font-size: 14px;
+            color: var(--energy-color);
+            font-weight: bold;
+            margin-top: 6px;
+            z-index: 3;
+        }
+
+        .place-1 .pedestal-xp {
+            color: var(--gold);
+            font-size: 16px;
+        }
+
+        .place-3 .pedestal-xp {
+            color: #f97316;
+        }
+
+        .holo-card-pedestal:hover {
+            transform: translateY(-12px) rotateY(6deg) rotateX(2deg);
+            border-color: var(--hover-border);
+            box-shadow: 
+                0 30px 60px rgba(0,0,0,0.9),
+                0 0 35px var(--glow-color);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255,255,255,0.08) 100%);
+        }
+
+        /* Advanced keyframe sheets */
+        @keyframes floatAvatar {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes riseSparkle {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 0;
+            }
+            20% {
+                opacity: 0.7;
+            }
+            85% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(-280px) scale(1.3);
+                opacity: 0;
+            }
+        }
+
+        @keyframes rotateSigil {
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Glass Leaderboard Table */
+        .glass-registry-table {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.85);
+            transition: border-color 0.8s ease;
+        }
+
+        .registry-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .registry-hdr {
+            border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+            text-align: left;
+        }
+
+        .registry-hdr-cell {
+            padding: 15px;
+            font-family: var(--font-display);
+            color: var(--gold);
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .registry-row {
+            border-bottom: 1.5px solid rgba(255, 255, 255, 0.02);
+            transition: background 0.3s;
+        }
+
+        .registry-row:hover {
+            background: rgba(255, 255, 255, 0.015);
+        }
+
+        .registry-row.active {
+            background: var(--energy-dim);
+            border-color: rgba(59, 130, 246, 0.15);
+        }
+
+        .registry-cell {
+            padding: 18px 15px;
+            color: #94a3b8;
+        }
+
+        .registry-cell.rank {
+            font-family: var(--font-display);
+            font-weight: 900;
+            color: var(--energy-color);
+        }
+
+        .registry-cell.name {
+            color: #FFF;
+            font-weight: bold;
+        }
+
+        .registry-cell.xp {
+            font-family: monospace;
+            text-align: right;
+            font-weight: bold;
+            color: #FFF;
+        }
+
+        /* ----------------------------------------------------
+           TAB 4: Character Vault (Inventory / Stats)
+           ---------------------------------------------------- */
+        .vault-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .vault-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 35px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.85);
+            min-height: 480px;
+            transition: border-color 0.8s ease;
+        }
+
+        .vault-card-header {
+            border-bottom: 1.5px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        .vault-card-title {
+            font-family: var(--font-display);
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--gold);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .stat-item-box {
+            background: rgba(255,255,255,0.01);
+            border: 1.5px solid rgba(255,255,255,0.02);
+            border-radius: 6px;
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.3s;
+        }
+
+        .stat-item-box:hover {
+            border-color: var(--energy-color);
+            background: var(--energy-dim);
+        }
+
+        .stat-label-text {
+            font-family: var(--font-display);
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+
+        .stat-val-text {
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: bold;
+            color: #FFF;
+        }
+
+        /* Equipment Amulets Grid */
+        .amulet-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .amulet-slot {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            border: 2px dashed rgba(244, 208, 104, 0.2);
+            background: rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .amulet-slot:hover {
+            border-style: solid;
+            border-color: var(--energy-color);
+            background: var(--energy-dim);
+            box-shadow: 0 0 15px var(--energy-glow);
+        }
+
+        .amulet-label {
+            font-size: 9px;
+            font-family: var(--font-display);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+
+        .amulet-slot.equipped {
+            border-style: solid;
+            border-color: var(--gold);
+            box-shadow: 0 0 15px var(--gold-glow);
+            background: rgba(244, 208, 104, 0.02);
+        }
+
+        .equipped-pin {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 8px;
+            height: 8px;
+            background: var(--gold);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--gold-glow);
+        }
+
+        /* ----------------------------------------------------
+           Gemstone Alignments Forge dashboard controls
+           ---------------------------------------------------- */
+        .gemstone-forge-box {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid var(--glass-border);
+            padding: 14px;
+            border-radius: 8px;
+            z-index: 100;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.7);
+        }
+
+        .forge-gem-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(0,0,0,0.5);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        .forge-gem-dot::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border: 1.5px dashed transparent;
+            border-radius: 50%;
+            transition: transform 0.8s, border-color 0.8s;
+        }
+
+        .forge-gem-dot:hover {
+            transform: scale(1.15);
+        }
+
+        .forge-gem-dot.active::after {
+            border-color: var(--energy-color);
+            transform: rotate(360deg);
+        }
+
+        .gem-gold-shard { background: radial-gradient(circle at 30% 30%, #FFF 0%, #F4D068 50%, #7c6130 100%); }
+        .gem-red-shard { background: radial-gradient(circle at 30% 30%, #FFF 0%, #EF4444 50%, #7f1d1d 100%); }
+        .gem-blue-shard { background: radial-gradient(circle at 30% 30%, #FFF 0%, #3B82F6 50%, #1e3a8a 100%); }
+        .gem-green-shard { background: radial-gradient(circle at 30% 30%, #FFF 0%, #10B981 50%, #064e3b 100%); }
+
+        @keyframes spinClockwise { 100% { transform: rotate(360deg); } }
+        @keyframes spinCounter { 100% { transform: rotate(-360deg); } }
+        @keyframes pulseText { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+        @keyframes waveMotion { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body class="theme-syntaxis">
+
+    <!-- Canvas system representing stardust layout -->
+    <canvas id="astral-canvas"></canvas>
+    
+    <!-- Dynamic mouse tracking lighting aura -->
+    <div class="ambient-radial-glow"></div>
+
+    <!-- HUD Arcane Header Instrument -->
+    <div class="cosmic-hud" id="hud-nav-panel">
+        <div class="hud-bracket bracket-tl"></div>
+        <div class="hud-bracket bracket-tr"></div>
+        <div class="hud-bracket bracket-bl"></div>
+        <div class="hud-bracket bracket-br"></div>
+
+        <div class="hud-logo" onclick="switchTheme('gold')">
+            <div class="logo-sigil-box">
+                <div class="logo-ring"></div>
+                <div class="logo-ring-dashed"></div>
+                <div class="logo-center">✧</div>
+            </div>
+            <div class="logo-text">
+                <h1 class="logo-title">Codex Academica</h1>
+                <span class="logo-subtitle">Arcane Command Console</span>
+            </div>
+        </div>
+
+        <nav class="hud-tabs">
+            <button class="hud-tab-item active" onclick="switchTab('workbench', this)">Workbench</button>
+            <button class="hud-tab-item" onclick="switchTab('map', this)">Celestial Map</button>
+            <button class="hud-tab-item" onclick="switchTab('leaderboard', this)">Legends</button>
+            <button class="hud-tab-item" onclick="switchTab('vault', this)">Vault Inventory</button>
+        </nav>
+
+        <div class="mana-core-widget" id="xp-indicator" onclick="triggerMagicShockwave()">
+            <div class="mana-core-sphere" title="Cast energy pulse">
+                <div class="mana-liquid-fill" id="liquid-xp-bar"></div>
+            </div>
+            <div class="core-text-details">
+                <span class="core-lvl-label">LVL 4 ADEPT</span>
+                <span class="core-xp-val" id="xp-val-text">740 / 1000 XP</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dynamic Pages Container -->
+    <div class="deck-wrapper">
+
+        <!-- TAB 1: Workbench Layout -->
+        <div class="tab-panel active" id="view-workbench">
+            <div class="workbench-layout">
+                
+                <!-- Left Section: Code compilation altar -->
+                <div class="altar-panel">
+                    <div class="altar-header">
+                        <h2 class="altar-title">Incantation Altar</h2>
+                        <div class="incantation-tabs">
+                            <button class="incantation-chip active" onclick="loadSpell('lumos', this)">Lumos</button>
+                            <button class="incantation-chip" onclick="loadSpell('incendio', this)">Incendio</button>
+                            <button class="incantation-chip" onclick="loadSpell('alohomora', this)">Alohomora</button>
+                        </div>
+                    </div>
+
+                    <div class="spell-editor-box">
+                        <textarea class="spell-editor-textarea" id="code-altar-textarea" spellcheck="false">
+function castLumos() {
+    // Channel light particle alignments
+    let intensity = "MAX_AURORA";
+    console.log("Spellcast: Lumos active. Glow level: " + intensity);
+    return true;
+}
+                        </textarea>
+
+                        <!-- Holographic compiles spinner overlay -->
+                        <div class="spell-compiling-overlay" id="editor-compiling-indicator">
+                            <div class="compiling-rune-spin">
+                                <svg class="ring-path-svg outer" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="45" />
+                                    <polygon points="50,15 19,68 81,68" stroke-dasharray="2 2" />
+                                </svg>
+                                <svg class="ring-path-svg middle" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="33" stroke-dasharray="8 3" />
+                                </svg>
+                                <svg class="ring-path-svg inner" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="18" stroke-dasharray="2 3" />
+                                    <circle cx="50" cy="50" r="4" />
+                                </svg>
+                            </div>
+                            <span class="compiling-text">Compiling Incantation</span>
+                        </div>
+                    </div>
+
+                    <div class="altar-footer">
+                        <button class="cast-ritual-btn" onclick="executeSpellcast()">Cast Incantation</button>
+
+                        <div class="altar-sigil-rings" id="altar-magic-portal">
+                            <svg class="ring-path-svg outer" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" />
+                            </svg>
+                            <svg class="ring-path-svg middle" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="33" stroke-dasharray="6 4" />
+                            </svg>
+                            <svg class="ring-path-svg inner" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="18" stroke-dasharray="2 2" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Section: Parchment details scroll card -->
+                <div class="quest-scroll">
+                    <div class="scroll-title-bar">
+                        <span>Spell Objectives</span>
+                        <span class="quest-difficulty">Adept IV</span>
+                    </div>
+
+                    <div class="quest-instructions">
+                        <p style="margin-bottom: 16px;">"Channel the incantation of absolute luminosity. By compiling syntax arrays and directing loops, light the ley paths connecting the Houses."</p>
+                        
+                        <div class="objective-badge">
+                            <strong>Objective parameter:</strong> Complete the <code>castLumos</code> parameters to return <code>true</code> and register intensity <code>"MAX_AURORA"</code>.
+                        </div>
+                    </div>
+
+                    <!-- Scroll output monitor console -->
+                    <div class="output-monitor" id="console-logs-list">
+                        <div class="console-line">
+                            <span class="console-time">[00:00:00]</span>
+                            <span class="console-text">Altar ready. Direct energy parameters to compile.</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TAB 2: Ley Lines Map -->
+        <div class="tab-panel" id="view-map">
+            <div class="map-layout">
+                
+                <!-- Celestial Map table grid -->
+                <div class="celestial-map-card" id="constellation-map-wrapper">
+                    <canvas id="map-lines-canvas"></canvas>
+
+                    <!-- Completed Node: Variables -->
+                    <div class="constellation-star completed" style="top: 22%; left: 18%;" onclick="focusConstellationNode('variables')">
+                        <div class="star-aurora"></div>
+                        <div class="star-core-element"></div>
+                        <span class="star-text-label">Valley of Variables</span>
+                    </div>
+
+                    <!-- Active Node: Loops -->
+                    <div class="constellation-star" style="top: 48%; left: 45%;" onclick="focusConstellationNode('loops')">
+                        <div class="star-aurora"></div>
+                        <div class="star-core-element"></div>
+                        <span class="star-text-label">Loops Abyss</span>
+                    </div>
+
+                    <!-- Locked Node: Conditionals -->
+                    <div class="constellation-star locked" style="top: 26%; left: 78%;" onclick="focusConstellationNode('conditionals')">
+                        <div class="star-aurora"></div>
+                        <div class="star-core-element"></div>
+                        <span class="star-text-label">Citadel of Choices</span>
+                    </div>
+
+                    <!-- Locked Node: Functions -->
+                    <div class="constellation-star locked" style="top: 76%; left: 24%;" onclick="focusConstellationNode('functions')">
+                        <div class="star-aurora"></div>
+                        <div class="star-core-element"></div>
+                        <span class="star-text-label">Functions Sanctum</span>
+                    </div>
+
+                    <!-- Locked Node: DOM -->
+                    <div class="constellation-star locked" style="top: 78%; left: 68%;" onclick="focusConstellationNode('dom')">
+                        <div class="star-aurora"></div>
+                        <div class="star-core-element"></div>
+                        <span class="star-text-label">DOM Ramparts</span>
+                    </div>
+                </div>
+
+                <!-- Right Section: Details parchment scroll details -->
+                <div class="quest-scroll">
+                    <div class="scroll-title-bar">
+                        <span id="map-quest-title">Loops Abyss</span>
+                        <span class="quest-difficulty" id="map-quest-diff">Adept V</span>
+                    </div>
+
+                    <div class="quest-instructions" id="map-quest-desc">
+                        <p style="margin-bottom: 16px;">"Repeat logic commands to construct complex matrices of raw magic. Weave cycles of loops to channels energies along the ley lines."</p>
+                        
+                        <div class="objective-badge" style="margin-top: 20px;">
+                            <strong>Reward output:</strong> +350 Guild XP, 1x Ember Stone Core
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 30px;">
+                        <button class="cast-ritual-btn" onclick="openArenaFromMap()">Open Spell Workbench</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TAB 3: Legends (Champions Pantheon) -->
+        <div class="tab-panel" id="view-leaderboard">
+            <div class="legends-layout">
+                
+                <!-- Podium pedestal cards -->
+                <div class="podium-container">
+                    
+                    <!-- Rank 2: Ethereal card -->
+                    <div class="holo-card-pedestal place-2">
+                        <!-- Sparkle Fountain -->
+                        <div class="sparkle-fountain">
+                            <div class="sparkle-dot"></div>
+                            <div class="sparkle-dot"></div>
+                            <div class="sparkle-dot"></div>
+                            <div class="sparkle-dot"></div>
+                            <div class="sparkle-dot"></div>
+                        </div>
+                        <!-- Runic Sigil Background -->
+                        <div class="runic-sigil">
+                            <svg viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="46" />
+                                <circle cx="50" cy="50" r="38" stroke-dasharray="6 3" />
+                                <circle cx="50" cy="50" r="28" />
+                                <polygon points="50,15 80,68 20,68" stroke-dasharray="2 1" />
+                                <polygon points="50,85 80,32 20,32" stroke-dasharray="2 1" />
+                            </svg>
+                        </div>
+                        <!-- Gloss Shimmer Sweep -->
+                        <div class="pedestal-shimmer"></div>
+
+                        <div class="pedestal-aura">
+                            <div class="pedestal-avatar">🦅</div>
+                        </div>
+                        <span class="pedestal-rank-tag">Rank 2</span>
+                        <span class="pedestal-name">Adept Lyra</span>
+                        <span class="pedestal-xp">3,850 XP</span>
+                    </div>
+
+                    <!-- Rank 1: Gold core champion -->
+                    <div class="holo-card-pedestal place-1">
+                        <!-- Sparkle Fountain -->
+                        <div class="sparkle-fountain">
+                            <div class="sparkle-dot"></div>
+                            <div class="sparkle-dot"></div>
+                            <div class="sparkle-dot"></div>
+                            <div class="sparkle-dot"></div>
+                            <div class="sparkle-dot"></div>
+                        </div>
+                        <!-- Runic Sigil Background -->
+                        <div class="runic-sigil">
+                            <svg viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="46" />
+                                <circle cx="50" cy="50" r="38" stroke-dasharray="6 3" />
+                                <circle cx="50" cy="50" r="28" />
+                                <polygon points="50,15 80,68 20,68" stroke-dasharray="2 1" />
+                                <polygon points="50,85 80,32 20,32" stroke-dasharray="2 1" />
+                            </svg>
+                        </div>
+                        <!-- Gloss Shimmer Sweep -->
+                        <div class="pedestal-shimmer"></div>
+
+                        <div class="pedestal-aura">
+                            <div class="pedestal-avatar">🐉</div>
+                        </div>
+                        <span class="pedestal-rank-tag">Grand Archon</span>
+                        <span class="pedestal-name">Nova Spell</span>
+                        <span class="pedestal-xp">4,900 XP</span>
+                    </div>
+
+                    <!-- Rank 3: Serpent card -->
+                    <div class="holo-card-pedestal place-3">
+                        <!-- Sparkle Fountain -->
+                        <div class="sparkle-fountain">
+                            <div class="sparkle-dot"></div>
+                            <div class="sparkle-dot"></div>
+                            <div class="sparkle-dot"></div>
+                            <div class="sparkle-dot"></div>
+                            <div class="sparkle-dot"></div>
+                        </div>
+                        <!-- Runic Sigil Background -->
+                        <div class="runic-sigil">
+                            <svg viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="46" />
+                                <circle cx="50" cy="50" r="38" stroke-dasharray="6 3" />
+                                <circle cx="50" cy="50" r="28" />
+                                <polygon points="50,15 80,68 20,68" stroke-dasharray="2 1" />
+                                <polygon points="50,85 80,32 20,32" stroke-dasharray="2 1" />
+                            </svg>
+                        </div>
+                        <!-- Gloss Shimmer Sweep -->
+                        <div class="pedestal-shimmer"></div>
+
+                        <div class="pedestal-aura">
+                            <div class="pedestal-avatar">🐍</div>
+                        </div>
+                        <span class="pedestal-rank-tag">Rank 3</span>
+                        <span class="pedestal-name">Void Kael</span>
+                        <span class="pedestal-xp">3,200 XP</span>
+                    </div>
+
+                </div>
+
+                <!-- Leaderboard entries registry list -->
+                <div class="glass-registry-table">
+                    <table class="registry-table">
+                        <thead>
+                            <tr class="registry-hdr">
+                                <th class="registry-hdr-cell" style="width: 15%;">Rank</th>
+                                <th class="registry-hdr-cell">Hero Champion</th>
+                                <th class="registry-hdr-cell" style="text-align: right;">Total Guild XP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="registry-row active">
+                                <td class="registry-cell rank">#4</td>
+                                <td class="registry-cell name">Wandering Adept (You)</td>
+                                <td class="registry-cell xp">2,740 XP</td>
+                            </tr>
+                            <tr class="registry-row">
+                                <td class="registry-cell rank">#5</td>
+                                <td class="registry-cell name">Alchemist Cynthia</td>
+                                <td class="registry-cell xp">2,500 XP</td>
+                            </tr>
+                            <tr class="registry-row">
+                                <td class="registry-cell rank">#6</td>
+                                <td class="registry-cell name">Oracle Sarah</td>
+                                <td class="registry-cell xp">2,280 XP</td>
+                            </tr>
+                            <tr class="registry-row">
+                                <td class="registry-cell rank">#7</td>
+                                <td class="registry-cell name">Syntaxis Core</td>
+                                <td class="registry-cell xp">1,950 XP</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TAB 4: Character Vault -->
+        <div class="tab-panel" id="view-vault">
+            <div class="vault-layout">
+                
+                <!-- Stats details scroll -->
+                <div class="vault-card">
+                    <div class="vault-card-header">
+                        <h2 class="vault-card-title">Resonance Statistics</h2>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-item-box">
+                            <span class="stat-label-text">Total Guild XP</span>
+                            <span class="stat-val-text">2,740</span>
+                        </div>
+                        <div class="stat-item-box">
+                            <span class="stat-label-text">Rituals Cast</span>
+                            <span class="stat-val-text">14 Spells</span>
+                        </div>
+                        <div class="stat-item-box">
+                            <span class="stat-label-text">Incantation Streak</span>
+                            <span class="stat-val-text" style="color: var(--gold);">5 Days 🔥</span>
+                        </div>
+                        <div class="stat-item-box">
+                            <span class="stat-label-text">Mana Resonance</span>
+                            <span class="stat-val-text">Adept Level IV</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Equipable items Amulets bag -->
+                <div class="vault-card">
+                    <div class="vault-card-header">
+                        <h2 class="vault-card-title">Amulet Inventory</h2>
+                    </div>
+
+                    <div class="amulet-grid">
+                        <div class="amulet-slot equipped" onclick="toggleAmulet(this)" title="Aura of the Dragon">
+                            <div class="equipped-pin"></div>
+                            🐉
+                            <span class="amulet-label">Dragon</span>
+                        </div>
+                        <div class="amulet-slot" onclick="toggleAmulet(this)" title="Aura of Flame">
+                            🔥
+                            <span class="amulet-label">Ember</span>
+                        </div>
+                        <div class="amulet-slot" onclick="toggleAmulet(this)" title="Aura of the Falcon">
+                            🦅
+                            <span class="amulet-label">Oracle</span>
+                        </div>
+                        <div class="amulet-slot" onclick="toggleAmulet(this)" title="Aura of shadows">
+                            🐍
+                            <span class="amulet-label">Serpent</span>
+                        </div>
+                        <div class="amulet-slot" style="opacity: 0.25; cursor: not-allowed; border-style: dotted;">
+                            🔒
+                            <span class="amulet-label">Locked</span>
+                        </div>
+                        <div class="amulet-slot" style="opacity: 0.25; cursor: not-allowed; border-style: dotted;">
+                            🔒
+                            <span class="amulet-label">Locked</span>
+                        </div>
+                        <div class="amulet-slot" style="opacity: 0.25; cursor: not-allowed; border-style: dotted;">
+                            🔒
+                            <span class="amulet-label">Locked</span>
+                        </div>
+                        <div class="amulet-slot" style="opacity: 0.25; cursor: not-allowed; border-style: dotted;">
+                            🔒
+                            <span class="amulet-label">Locked</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Floating Gemstone Socket Forge -->
+    <div class="gemstone-forge-box" title="Align House Resonance">
+        <div class="forge-gem-dot gem-gold-shard" onclick="switchTheme('gold')" title="Guild Gold Alignment"></div>
+        <div class="forge-gem-dot gem-red-shard" onclick="switchTheme('algor')" title="House Algor Alignment (Ruby)"></div>
+        <div class="forge-gem-dot gem-blue-shard active" onclick="switchTheme('syntaxis')" title="House Syntaxis Alignment (Sapphire)"></div>
+        <div class="forge-gem-dot gem-green-shard" onclick="switchTheme('null')" title="House Null Alignment (Emerald)"></div>
+    </div>
+
+    <!-- Scripting interactive engines -->
+    <script>
+        const spellCodes = {
+            lumos: `function castLumos() {
+    // Channel light particle alignments
+    let intensity = "MAX_AURORA";
+    console.log("Spellcast: Lumos active. Glow level: " + intensity);
+    return true;
+}`,
+            incendio: `function castIncendio() {
+    // Ignite active thermal parameters
+    let combustion = 1800;
+    console.log("Spellcast: Incendio triggered. Heat Index: " + combustion);
+    return true;
+}`,
+            alohomora: `function castAlohomora() {
+    // Dissolve condition block locks
+    let keyBit = 2048;
+    console.log("Spellcast: Alohomora unlocked lock: " + keyBit);
+    return true;
+}`
+        };
+
+        const questsData = {
+            variables: {
+                title: "Valley of Variables",
+                desc: "Variables represent spell storage. Channels of energy are neatly organized inside variables journals. Complete basic data bindings.",
+                difficulty: "Adept II"
+            },
+            loops: {
+                title: "Loops Abyss",
+                desc: "Repeat logic commands to construct complex matrices of raw magic. Weave cycles of loops to channels energies along the ley lines.",
+                difficulty: "Adept V"
+            },
+            conditionals: {
+                title: "Citadel of Choices",
+                desc: "Branch pathways using logic statements. Dissolve path blocks by determining if/else checks on magical runes.",
+                difficulty: "Adept VII"
+            },
+            functions: {
+                title: "Functions Sanctum",
+                desc: "Enclosure spells that encapsulate actions. Package incantations into reusable modules to cast instantly.",
+                difficulty: "Adept VIII"
+            },
+            dom: {
+                title: "DOM Ramparts",
+                desc: "Reshape the canvas rendering realm. Directly bind logic to interface elements of the game world.",
+                difficulty: "Archmage I"
+            }
+        };
+
+        // Navigation controls
+        function switchTab(viewId, btn) {
+            document.querySelectorAll('.hud-tab-item').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(`view-${viewId}`).classList.add('active');
+
+            logConsole(`Command Console redirected to layout tab: ${viewId.toUpperCase()}`);
+            
+            if (viewId === 'map') {
+                setTimeout(resizeMapCanvas, 50);
+            }
+        }
+
+        // Incantation loader
+        function loadSpell(spellKey, chip) {
+            document.querySelectorAll('.incantation-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+
+            const textEdit = document.getElementById('code-altar-textarea');
+            textEdit.value = spellCodes[spellKey];
+            
+            logConsole(`Ritual parameter formulas aligned to spell: ${spellKey.toUpperCase()}`);
+        }
+
+        // Simulation spell cast
+        function executeSpellcast() {
+            const overlay = document.getElementById('editor-compiling-indicator');
+            const portal = document.getElementById('altar-magic-portal');
+            
+            overlay.classList.add('active');
+            portal.classList.add('compiling');
+            logConsole("Casting incantation formulas. Aligning key runes...");
+
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                portal.classList.remove('compiling');
+                
+                const isSuccess = Math.random() > 0.25;
+                if (isSuccess) {
+                    logConsole("INCANTATION COMPLETE. Mana successfully channeled!", "success");
+                    triggerMagicShockwave();
+                    addXP(120);
+                } else {
+                    logConsole("Casting interrupted: Runic compiler error. Refine syntax loops.", "error");
+                }
+            }, 1800);
+        }
+
+        // Add XP and animate
+        let currentXP = 740;
+        function addXP(val) {
+            currentXP += val;
+            if (currentXP >= 1000) {
+                currentXP = currentXP - 1000;
+                logConsole("LEVEL UP! You have attained a higher magical rank!", "success");
+            }
+            
+            const xpBar = document.getElementById('liquid-xp-bar');
+            xpBar.style.height = `${(currentXP / 1000) * 100}%`;
+            
+            document.getElementById('xp-val-text').innerText = `${currentXP} / 1000 XP`;
+        }
+
+        // Console system
+        function logConsole(text, type = "info") {
+            const logBox = document.getElementById('console-logs-list');
+            const now = new Date();
+            const timeStr = `[${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}]`;
+            
+            const row = document.createElement('div');
+            row.className = 'console-line';
+            row.innerHTML = `<span class="console-time">${timeStr}</span> <span class="console-text ${type}">${text}</span>`;
+            
+            logBox.appendChild(row);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        // Equip/unequip inventory items
+        function toggleAmulet(slot) {
+            if (slot.style.opacity === "0.25") return; // Locked
+            
+            const wasEquipped = slot.classList.contains('equipped');
+            document.querySelectorAll('.amulet-slot').forEach(s => {
+                s.classList.remove('equipped');
+                const pin = s.querySelector('.equipped-pin');
+                if (pin) pin.remove();
+            });
+
+            if (!wasEquipped) {
+                slot.classList.add('equipped');
+                const pin = document.createElement('div');
+                pin.className = 'equipped-pin';
+                slot.appendChild(pin);
+                logConsole(`Equipped charm: ${slot.querySelector('.amulet-label').innerText.toUpperCase()}`);
+                triggerMagicShockwave();
+            } else {
+                logConsole("Unequipped charm.");
+            }
+        }
+
+        // Align themes
+        function switchTheme(theme) {
+            document.querySelectorAll('.forge-gem-dot').forEach(g => g.classList.remove('active'));
+            const dot = document.querySelector(`.gem-${theme}-shard`);
+            if (dot) dot.classList.add('active');
+
+            const body = document.body;
+            body.className = '';
+            body.classList.add(`theme-${theme}`);
+            
+            // Adjust CSS variables dynamics
+            const activeColor = getComputedStyle(body).getPropertyValue('--energy-color');
+            logConsole(`House Alignment synchronized: Aligned energy fields with ${theme.toUpperCase()} matrix.`, "success");
+            
+            triggerMagicShockwave();
+        }
+
+        // Focus map nodes
+        function focusConstellationNode(nodeKey) {
+            const node = questsData[nodeKey];
+            if (!node) return;
+
+            document.getElementById('map-quest-title').innerText = node.title;
+            document.getElementById('map-quest-diff').innerText = node.difficulty;
+            document.getElementById('map-quest-desc').innerHTML = `<p style="margin-bottom: 16px;">"${node.desc}"</p><div class="objective-badge" style="margin-top: 20px;"><strong>Reward output:</strong> +350 Guild XP, 1x Ember Stone Core</div>`;
+            
+            selectedMapNode = nodeKey;
+            logConsole(`Map Ley Line node focused: ${node.title}`);
+        }
+
+        function openArenaFromMap() {
+            switchTab('workbench', document.querySelectorAll('.hud-tab-item')[0]);
+        }
+
+        /* ----------------------------------------------------
+           Starfield Canvas Background Engine
+           ---------------------------------------------------- */
+        const canvas = document.getElementById('astral-canvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        const stars = [];
+        const maxStars = 150;
+
+        for (let i = 0; i < maxStars; i++) {
+            stars.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                size: Math.random() * 1.5 + 0.5,
+                opacity: Math.random(),
+                speed: (Math.random() * 0.02) + 0.005,
+                depth: Math.random() * 0.7 + 0.3
+            });
+        }
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        // Mouse coordinates for dynamic tracking
+        window.addEventListener('mousemove', (e) => {
+            document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+            document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+        });
+
+        let shockwaves = [];
+        function triggerMagicShockwave() {
+            const hud = document.getElementById('hud-nav-panel');
+            const rect = hud.getBoundingClientRect();
+            
+            shockwaves.push({
+                x: window.innerWidth / 2,
+                y: rect.top + (rect.height / 2),
+                radius: 10,
+                maxRadius: Math.max(window.innerWidth, window.innerHeight) * 0.8,
+                speed: 15,
+                opacity: 1
+            });
+        }
+
+        function renderAstralCanopy() {
+            ctx.fillStyle = '#010103';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Stars
+            stars.forEach(star => {
+                star.opacity += star.speed;
+                if (star.opacity > 1 || star.opacity < 0) {
+                    star.speed = -star.speed;
+                }
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(star.opacity)})`;
+                ctx.fill();
+            });
+
+            // Draw compilings shockwaves
+            shockwaves.forEach((wave, idx) => {
+                wave.radius += wave.speed;
+                wave.opacity = 1 - (wave.radius / wave.maxRadius);
+                
+                const activeColor = getComputedStyle(document.body).getPropertyValue('--energy-color').trim();
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = activeColor;
+                ctx.lineWidth = 3;
+                ctx.globalAlpha = wave.opacity * 0.45;
+                ctx.shadowColor = activeColor;
+                ctx.shadowBlur = 20;
+                ctx.stroke();
+                ctx.restore();
+
+                if (wave.radius >= wave.maxRadius) {
+                    shockwaves.splice(idx, 1);
+                }
+            });
+
+            requestAnimationFrame(renderAstralCanopy);
+        }
+        renderAstralCanopy();
+
+        /* ----------------------------------------------------
+           Ley Lines Map Connections Drawer
+           ---------------------------------------------------- */
+        const mapCanvas = document.getElementById('map-lines-canvas');
+        const mapCtx = mapCanvas.getContext('2d');
+        let selectedMapNode = 'loops';
+
+        function resizeMapCanvas() {
+            mapCanvas.width = mapCanvas.parentElement.clientWidth;
+            mapCanvas.height = mapCanvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeMapCanvas);
+
+        // Define star coordinates relative to parent element
+        const mapNodes = {
+            variables: { x: 0.18, y: 0.22 },
+            loops: { x: 0.45, y: 0.48 },
+            conditionals: { x: 0.78, y: 0.26 },
+            functions: { x: 0.24, y: 0.76 },
+            dom: { x: 0.68, y: 0.78 }
+        };
+
+        const mapConnections = [
+            { from: 'variables', to: 'loops', active: true },
+            { from: 'loops', to: 'conditionals', active: false },
+            { from: 'loops', to: 'functions', active: false },
+            { from: 'loops', to: 'dom', active: false }
+        ];
+
+        let lineDashOffset = 0;
+        function drawMapPaths() {
+            if (document.getElementById('view-map').classList.contains('active')) {
+                const w = mapCanvas.width;
+                const h = mapCanvas.height;
+                mapCtx.clearRect(0, 0, w, h);
+
+                lineDashOffset -= 0.5;
+
+                mapConnections.forEach(conn => {
+                    const start = mapNodes[conn.from];
+                    const end = mapNodes[conn.to];
+                    if (!start || !end) return;
+
+                    const sx = start.x * w;
+                    const sy = start.y * h;
+                    const ex = end.x * w;
+                    const ey = end.y * h;
+
+                    const energyColor = getComputedStyle(document.body).getPropertyValue('--energy-color').trim();
+
+                    mapCtx.save();
+                    mapCtx.beginPath();
+                    mapCtx.moveTo(sx, sy);
+                    mapCtx.lineTo(ex, ey);
+
+                    if (conn.active) {
+                        mapCtx.strokeStyle = energyColor;
+                        mapCtx.lineWidth = 2.5;
+                        mapCtx.shadowColor = energyColor;
+                        mapCtx.shadowBlur = 10;
+                        mapCtx.setLineDash([8, 4]);
+                        mapCtx.lineDashOffset = lineDashOffset;
+                        mapCtx.stroke();
+                    } else {
+                        mapCtx.strokeStyle = 'rgba(255,255,255,0.06)';
+                        mapCtx.lineWidth = 1.2;
+                        mapCtx.stroke();
+                    }
+                    mapCtx.restore();
+                });
+            }
+            requestAnimationFrame(drawMapPaths);
+        }
+        setTimeout(resizeMapCanvas, 100);
+        drawMapPaths();
+
+    </script>
+</body>
+</html>
